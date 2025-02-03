@@ -16,15 +16,6 @@ class SceneReader {
         Color bkgcolor;
         Color mtlcolor;
         std::vector<Sphere> spheres;
-
-        /*Vector3 readEye(std::string line);*/
-        /*Vector3 readViewdir(std::string line);*/
-        /*Vector3 readUpdir(std::string line);*/
-        /*float readVfov(std::string line);*/
-        /*int readWidth(std::string line);*/
-        /*int readHeight(std::string line);*/
-        /*Color readBkgcolor(std::string line);*/
-        /*Color readMtlcolor(std::string line);*/
        
     public:
         SceneReader();

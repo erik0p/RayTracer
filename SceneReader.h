@@ -13,8 +13,8 @@ class SceneReader {
         Vector3 updir;
 
         float vfov;
-        int width;
-        int height;
+        float width;
+        float height;
 
         Color bkgcolor;
         Color mtlcolor;
@@ -38,8 +38,8 @@ class SceneReader {
         const Vector3& getViewdir() const { return viewdir; }
         const Vector3& getUpdir() const { return updir; }
         const float& getVfov() const { return vfov; }
-        const int& getWidth() const { return width; }
-        const int& getHeight() const { return height; }
+        const float& getWidth() const { return width; }
+        const float& getHeight() const { return height; }
         const Color& getBkgcolor() const { return bkgcolor; }
         const Color& getMtlcolor() const { return mtlcolor; }
         const std::vector<Sphere> getSpheres() const { return spheres; }

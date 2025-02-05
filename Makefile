@@ -8,20 +8,23 @@ else
 	RM = rm -f
 endif
 
-raytracer1a: Render.o SceneReader.o Sphere.o Point3.o Vector3.o Color.o
-	$(CXX) $(CXXFLAGS) Render.o SceneReader.o Sphere.o Point3.o Vector3.o Color.o -o raytracer1a
+raytracer1a: Render.o SceneReader.o Sphere.o Ray.o Vector3.o Color.o
+	$(CXX) $(CXXFLAGS) Render.o SceneReader.o Sphere.o Ray.o Vector3.o Color.o -o raytracer1a
 
-Render.o: Render.cpp SceneReader.o SceneReader.h
+Render.o: Render.cpp SceneReader.o Ray.o Vector3.o
 	$(CXX) $(CXXFLAGS) -c Render.cpp
 
-SceneReader.o: SceneReader.cpp SceneReader.h Vector3.o Color.o Sphere.o Point3.o
+SceneReader.o: SceneReader.cpp SceneReader.h Ray.o Vector3.o Color.o Sphere.o
 	$(CXX) $(CXXFLAGS) -c SceneReader.cpp
 
-Sphere.o: Sphere.cpp Sphere.h Point3.o
+Sphere.o: Sphere.cpp Sphere.h Vector3.o
 	$(CXX) $(CXXFLAGS) -c Sphere.cpp
 
-Point3.o: Point3.cpp Point3.h
-	$(CXX) $(CXXFLAGS) -c Point3.cpp
+# Point3.o: Point3.cpp Point3.h
+# 	$(CXX) $(CXXFLAGS) -c Point3.cpp
+
+Ray.o: Ray.cpp Ray.h Vector3.o
+	$(CXX) $(CXXFLAGS) -c Ray.cpp
 
 Vector3.o: Vector3.cpp Vector3.h
 	$(CXX) $(CXXFLAGS) -c Vector3.cpp

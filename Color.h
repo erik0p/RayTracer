@@ -19,7 +19,7 @@ class Color {
          * @param g_ the green value 0-1
          * @param b_ the blue value 0-1
          */
-        Color(int r_, int g_, int b_);
+        Color(float r_, float g_, float b_);
 
         float getR() const { return r; }
         float getG() const { return g; }

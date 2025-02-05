@@ -7,7 +7,7 @@ Color::Color() {
     b = 0.0f;
 }
 
-Color::Color(int r_, int g_, int b_) {
+Color::Color(float r_, float g_, float b_) {
     if (r_ < 0.0f) r_ = 0.0f;
     if (g_ < 0.0f) g_ = 0.0f;
     if (b_ < 0.0f) b_ = 0.0f;
@@ -32,6 +32,10 @@ Color Color::lerp(const Color& c1, const Color& c2, float t) {
 }
 
 std::ostream& operator<<(std::ostream& out, const Color& color) {
-    out << std::to_string(color.r) << " " << std::to_string(color.g) << " " << std::to_string(color.b);
+    int r_ = color.r * 255.0f;
+    int g_ = color.g * 255.0f;
+    int b_ = color.b * 255.0f;
+
+    out << r_ << " " << g_ << " " << b_;
     return out;
 }

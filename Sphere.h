@@ -1,14 +1,17 @@
 #pragma once
-#include "Point3.h"
+#include "Vector3.h"
+#include "Color.h"
 
 class Sphere {
     private:
-        Point3 center;
+        Vector3 center;
         float radius;
+        Color color;
     public:
-        Sphere(Point3& center_, float radius_);
+        Sphere(Vector3& center_, float radius_, Color& color_);
 
-        const Point3& getCenter() const { return center; }
+        const Vector3& getCenter() const { return center; }
         float getRadius() const { return radius; }
+        const Color& getColor() const { return color; } 
         friend std::ostream& operator<<(std::ostream& out, const Sphere& sphere);
 };

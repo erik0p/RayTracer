@@ -25,11 +25,15 @@ Vector3 Vector3::operator-(const Vector3& v) const {
     return Vector3(x - v.x, y - v.y, z - v.z);
 }
 
-Vector3 Vector3::operator*(const float scalar) const {
+Vector3 operator*(const float& scalar, const Vector3& rhs) {
+    return Vector3(rhs.x * scalar, rhs.y * scalar, rhs.z * scalar);
+}
+
+Vector3 Vector3::operator*(const float& scalar) {
     return Vector3(x * scalar, y * scalar, z * scalar);
 }
 
-Vector3 Vector3::operator/(const float scalar) const {
+Vector3 Vector3::operator/(const float& scalar) {
     return Vector3(x / scalar, y / scalar, z / scalar);
 }
 

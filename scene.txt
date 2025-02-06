@@ -2,9 +2,9 @@ eye 0 0 0
 viewdir 0 0 -1
 updir 0 1 0
 vfov 90
-imsize 2000 1000
+imsize 500 500
 bkgcolor 1.0 1.0 1.0
 mtlcolor 0.0 0.0 1.0 
-sphere 0 0 -10 5
+sphere 0 0 -10 2
 mtlcolor 0.0 1.0 0.0
-sphere 0 3.0 -10 5 
+sphere 0 3.0 1 2 

@@ -24,6 +24,7 @@ public:
   float length() const;
   void normalize();
   Vector3 normalized() const;
+  float dot(const Vector3& v) const;
   static float distanceBetween(const Vector3& v1, const Vector3& v2);
   static Vector3 add(const Vector3& v1, const Vector3& v2);
   static Vector3 subtract(const Vector3& v1, const Vector3& v2);

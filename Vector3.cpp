@@ -58,6 +58,10 @@ Vector3 Vector3::normalized() const {
     return Vector3(x / len, y / len, z / len);
 }
 
+float Vector3::dot(const Vector3& v) const {
+    return (x * v.x + y * v.y + z * v.z);
+}
+
 float Vector3::distanceBetween(const Vector3& v1, const Vector3& v2) {
     return sqrt(
             (v1.x - v2.x) * (v1.x - v2.x) + 

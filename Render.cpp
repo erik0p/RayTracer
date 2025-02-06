@@ -37,10 +37,11 @@ int main(int argc, char *argv[]) {
         outputFile << scene.getImgWidth() << " " << scene.getImgHeight() << std::endl;
         outputFile << "255" << std::endl;
 
-        for (int row = 0; row < scene.getImgWidth(); row++) {
-            for (int col = 0; col < scene.getImgHeight(); col++) {
+        for (int row = 0; row < scene.getImgHeight(); row++) {
+            for (int col = 0; col < scene.getImgWidth(); col++) {
                 
                 Vector3 viewPoint = scene.imageToView(row, col);
+                // std::cout << viewPoint << " ";
                 Vector3 dir = viewPoint - scene.getEye();
                 dir.normalize();
 
@@ -50,6 +51,7 @@ int main(int argc, char *argv[]) {
                 Color pxColor = scene.traceRay(ray);
                 outputFile << pxColor << std::endl;
             }
+            // std::cout << std::endl;
         }
         outputFile.close();
     }

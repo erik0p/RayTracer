@@ -117,12 +117,14 @@ int Scene::initializeScene(std::string fileName) {
     inputFile.close();
 
     // initialize v (vertical vector) and u (horizontal vector)
+    // viewdir.normalize();
+    // updir.normalize();
     u = Vector3::cross(viewdir, updir);
-    std::cout << "u " << u << std::endl;
     u.normalize();
+    std::cout << "u " << u << std::endl;
     v = Vector3::cross(u, viewdir);
-    std::cout << "v " << v << std::endl;
     v.normalize();
+    std::cout << "v " << v << std::endl;
 
     // unit vector in viewdir
     Vector3 n = viewdir.normalized();
@@ -148,7 +150,7 @@ Vector3 Scene::imageToView(int row, int col) {
     Vector3 deltaH = (ur - ul) / (imgWidth - 1.0f);
     Vector3 deltaV = (ll - ul) / (imgHeight - 1.0f);
 
-    Vector3 result = ul + (deltaH * static_cast<float>(row)) + (deltaV * static_cast<float>(col));
+    Vector3 result = ul + (deltaH * static_cast<float>(col)) + (deltaV * static_cast<float>(row));
     return result;
 }
 
@@ -168,15 +170,16 @@ Color Scene::traceRay(const Ray& ray) const {
         float cx = sphere.getCenter().getX();
         float cy = sphere.getCenter().getY();
         float cz = sphere.getCenter().getZ();
+        float r = sphere.getRadius();
 
         float a = 1.0f;
         float b = 2.0f * (dx * (x - cx) + dy * (y - cy) + dz * (z - cz));
-        float c = pow(x - cx, 2) + pow(y - cy, 2) + pow(z - cz, 2) - pow(sphere.getRadius(), 2);
-        float t1 = -b + sqrt(pow(b, 2) - 4.0f * c) / 2.0f;
-        float t2 = -b - sqrt(pow(b, 2) - 4.0f * c) / 2.0f;
+        float c = pow(x - cx, 2) + pow(y - cy, 2) + pow(z - cz, 2) - pow(r, 2);
         float discriminant = pow(b, 2) - 4.0f * a * c;
 
         if (discriminant > 0.0f) { // pierces sphere
+            float t1 = (-b + sqrt(discriminant)) / (2.0f * a);
+            float t2 = (-b - sqrt(discriminant)) / (2.0f * a);
             if (t1 < minT && t1 > 0.0f) {
                 minT = t1;
                 closestSphere = sphere;
@@ -186,7 +189,11 @@ Color Scene::traceRay(const Ray& ray) const {
                 closestSphere = sphere;
             }
         } if (discriminant == 0.0f) { // grazes sphere
-            closestSphere = sphere;
+            float t = -b / (2.0f * a);
+            if (t < minT && t > 0.0f) {
+                minT = t;
+                closestSphere = sphere;
+            }
         }
     }
 

@@ -1,4 +1,3 @@
 *.o
 *.exe
-output
-.ppm
+*.ppm

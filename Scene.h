@@ -6,15 +6,15 @@
 #include "Sphere.h"
 #include "Ray.h"
 
-class SceneReader {
+class Scene {
     private:
         Vector3 eye;
         Vector3 viewdir;
         Vector3 updir;
 
         float vfov;
-        float width;
-        float height;
+        float imgWidth;
+        float imgHeight;
 
         Color bkgcolor;
         Color mtlcolor;
@@ -32,14 +32,14 @@ class SceneReader {
         float viewWidth;
        
     public:
-        SceneReader();
+        Scene();
 
         const Vector3& getEye() const { return eye; }
         const Vector3& getViewdir() const { return viewdir; }
         const Vector3& getUpdir() const { return updir; }
         const float& getVfov() const { return vfov; }
-        const float& getWidth() const { return width; }
-        const float& getHeight() const { return height; }
+        const float& getImgWidth() const { return imgWidth; }
+        const float& getImgHeight() const { return imgHeight; }
         const Color& getBkgcolor() const { return bkgcolor; }
         const Color& getMtlcolor() const { return mtlcolor; }
         const std::vector<Sphere> getSpheres() const { return spheres; }
@@ -55,5 +55,5 @@ class SceneReader {
         int initializeScene(std::string fileName);
         Color traceRay(const Ray& ray) const;
         Vector3 imageToView(int row, int col);
-        friend std::ostream& operator<<(std::ostream& out, const SceneReader& sceneReader);
+        friend std::ostream& operator<<(std::ostream& out, const Scene& scene);
 };

@@ -16,6 +16,10 @@ public:
   float getX() const { return x; }
   float getY() const { return y; }
   float getZ() const { return z; }
+  Vector3 operator+(const Vector3 &v) const;
+  Vector3 operator-(const Vector3 &v) const;
+  Vector3 operator*(const float scalar) const;
+  Vector3 operator/(const float scalar) const;
   float length() const;
   void normalize();
   Vector3 normalized() const;

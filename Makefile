@@ -8,14 +8,14 @@ else
 	RM = rm -f
 endif
 
-raytracer1a: Render.o SceneReader.o Sphere.o Ray.o Vector3.o Color.o
-	$(CXX) $(CXXFLAGS) Render.o SceneReader.o Sphere.o Ray.o Vector3.o Color.o -o raytracer1a
+raytracer1a: Render.o Scene.o Sphere.o Ray.o Vector3.o Color.o
+	$(CXX) $(CXXFLAGS) Render.o Scene.o Sphere.o Ray.o Vector3.o Color.o -o raytracer1a
 
-Render.o: Render.cpp SceneReader.o Ray.o Vector3.o
+Render.o: Render.cpp Scene.o Ray.o Vector3.o
 	$(CXX) $(CXXFLAGS) -c Render.cpp
 
-SceneReader.o: SceneReader.cpp SceneReader.h Ray.o Vector3.o Color.o Sphere.o
-	$(CXX) $(CXXFLAGS) -c SceneReader.cpp
+Scene.o: Scene.cpp Scene.h Ray.o Vector3.o Color.o Sphere.o
+	$(CXX) $(CXXFLAGS) -c Scene.cpp
 
 Sphere.o: Sphere.cpp Sphere.h Vector3.o
 	$(CXX) $(CXXFLAGS) -c Sphere.cpp

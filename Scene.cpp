@@ -66,7 +66,7 @@ int Scene::initializeScene(std::string fileName) {
                 int imgWidth_, imgHeight_;
                 ss >> imgWidth_;
                 ss >> imgHeight_;
-                if (ss.fail() || imgWidth_ <= 0 || imgHeight_ <= 0) {
+                if (ss.fail() || imgWidth_ < 0 || imgHeight_ < 0) {
                     std::cout << "Invalid input for imsize parameter. Must provide two positive integers 'imsize width height'" << std::endl;
                     return -1;
                 }
@@ -144,11 +144,11 @@ int Scene::initializeScene(std::string fileName) {
     return 0;
 }
 
-Vector3 Scene::imageToView(int row, int col) {
+Vector3 Scene::imageToView(int i, int j) {
     Vector3 deltaH = (ur - ul) / (imgWidth - 1.0f);
     Vector3 deltaV = (ll - ul) / (imgHeight - 1.0f);
 
-    Vector3 result = ul + deltaH * static_cast<float>(col) + deltaV * static_cast<float>(row);
+    Vector3 result = ul + (deltaH * static_cast<float>(i)) + (deltaV * static_cast<float>(j));
     return result;
 }
 
@@ -185,7 +185,7 @@ Color Scene::traceRay(const Ray& ray) const {
                 minT = t2;
                 closestSphere = sphere;
             }
-        } else if (discriminant == 0.0f) { // grazes sphere
+        } if (discriminant == 0.0f) { // grazes sphere
             closestSphere = sphere;
         }
     }

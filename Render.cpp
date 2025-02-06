@@ -30,18 +30,18 @@ int main(int argc, char *argv[]) {
     std::string truncatedName = truncateSuffix(fileName);
     // Create .ppm file
     std::ofstream outputFile(truncatedName + ".ppm");
+
     if (outputFile.is_open()) {
         outputFile << "P3" << std::endl;
         outputFile << "# Raycaster" << std::endl;
         outputFile << scene.getImgWidth() << " " << scene.getImgHeight() << std::endl;
         outputFile << "255" << std::endl;
 
-        for (int row = 0; row < scene.getImgHeight(); row++) {
-            /*std::cout << "row " << row << " ";*/
-            for (int col = 0; col < scene.getImgWidth(); col++) {
-                /*std::cout << scene.imageToView(row, col) << " ";*/
-
-                Vector3 dir = scene.imageToView(row, col) - scene.getEye();
+        for (int i = 0; i < scene.getImgWidth(); i++) {
+            for (int j = 0; j < scene.getImgHeight(); j++) {
+                
+                Vector3 viewPoint = scene.imageToView(i, j);
+                Vector3 dir = viewPoint - scene.getEye();
                 dir.normalize();
 
                 Vector3 origin = scene.getEye();
@@ -50,7 +50,6 @@ int main(int argc, char *argv[]) {
                 Color pxColor = scene.traceRay(ray);
                 outputFile << pxColor << std::endl;
             }
-            /*std::cout << std::endl;*/
         }
         outputFile.close();
     }

@@ -1,8 +1,9 @@
 #pragma once
 #include "Vector3.h"
+#include "Object.h"
 #include "Color.h"
 
-class Sphere {
+class Sphere : public Object {
     private:
         Vector3 center;
         float radius;

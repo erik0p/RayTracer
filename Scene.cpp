@@ -144,11 +144,11 @@ int Scene::initializeScene(std::string fileName) {
     return 0;
 }
 
-Vector3 Scene::imageToView(int i, int j) {
+Vector3 Scene::imageToView(int row, int col) {
     Vector3 deltaH = (ur - ul) / (imgWidth - 1.0f);
     Vector3 deltaV = (ll - ul) / (imgHeight - 1.0f);
 
-    Vector3 result = ul + (deltaH * static_cast<float>(i)) + (deltaV * static_cast<float>(j));
+    Vector3 result = ul + (deltaH * static_cast<float>(row)) + (deltaV * static_cast<float>(col));
     return result;
 }
 

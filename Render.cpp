@@ -37,10 +37,10 @@ int main(int argc, char *argv[]) {
         outputFile << scene.getImgWidth() << " " << scene.getImgHeight() << std::endl;
         outputFile << "255" << std::endl;
 
-        for (int i = 0; i < scene.getImgWidth(); i++) {
-            for (int j = 0; j < scene.getImgHeight(); j++) {
+        for (int row = 0; row < scene.getImgWidth(); row++) {
+            for (int col = 0; col < scene.getImgHeight(); col++) {
                 
-                Vector3 viewPoint = scene.imageToView(i, j);
+                Vector3 viewPoint = scene.imageToView(row, col);
                 Vector3 dir = viewPoint - scene.getEye();
                 dir.normalize();
 

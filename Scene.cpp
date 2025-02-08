@@ -10,6 +10,14 @@
 #include <vector>
 
 Scene::Scene() {}
+Scene::~Scene() {
+    for (Object* obj : objects) {
+        delete obj;
+    }
+    objects.clear();
+}
+
+const double pi = 3.14159265358979323846;
 
 int Scene::initializeScene(std::string fileName) {
     std::ifstream inputFile(fileName);
@@ -107,8 +115,8 @@ int Scene::initializeScene(std::string fileName) {
                 }
                 Vector3 center(x, y, z);
                 Color color = mtlcolor;
-                Sphere sphere(center, r, color);
-                spheres.push_back(sphere);
+                Sphere* sphere = new Sphere(center, r, color);
+                objects.push_back(sphere);
             }
         }
     } else {
@@ -117,8 +125,8 @@ int Scene::initializeScene(std::string fileName) {
     inputFile.close();
 
     // initialize v (vertical vector) and u (horizontal vector)
-    // viewdir.normalize();
-    // updir.normalize();
+    viewdir.normalize();
+    updir.normalize();
     u = Vector3::cross(viewdir, updir);
     u.normalize();
     std::cout << "u " << u << std::endl;
@@ -129,9 +137,10 @@ int Scene::initializeScene(std::string fileName) {
     // unit vector in viewdir
     Vector3 n = viewdir.normalized();
 
-    float degToRad = M_PI / 180.0f;
+    float degToRad = pi / 180.0f;
     float aspectRatio = imgWidth / imgHeight;
-    float d = 1.0f;
+    float d = imgHeight / 2.0f / tan(0.5f * vfov * degToRad);
+    std::cout << "distance: " << d << std::endl;
     viewHeight = 2.0f * d * tan(0.5f * vfov * degToRad);
     viewWidth = viewHeight * aspectRatio;
 
@@ -149,55 +158,36 @@ int Scene::initializeScene(std::string fileName) {
 Vector3 Scene::imageToView(int row, int col) {
     Vector3 deltaH = (ur - ul) / (imgWidth - 1.0f);
     Vector3 deltaV = (ll - ul) / (imgHeight - 1.0f);
+    // Vector3 deltaH = (ur - ul) / (imgWidth);
+    // Vector3 deltaV = (ll - ul) / (imgHeight);
+    // Vector3 h = (ur - ul) / (2.0f * imgWidth);
+    // Vector3 v = (ll - ul) / (2.0f * imgHeight);
 
-    Vector3 result = ul + (deltaH * static_cast<float>(col)) + (deltaV * static_cast<float>(row));
+    Vector3 result = ul + deltaH * static_cast<float>(col) + deltaV * static_cast<float>(row);
     return result;
 }
 
 Color Scene::traceRay(const Ray& ray) const {
     Color color = bkgcolor;
-    Vector3 v;
-    Sphere closestSphere(v, 0, color);
+    // Vector3 v;
+    // Sphere closestSphere(v, 0, color);
+    Object *closestObject = NULL;
     float minT = FLT_MAX;
-
-    for (const Sphere &sphere : spheres) {
-        float x = ray.getOrigin().getX();
-        float y = ray.getOrigin().getY();
-        float z = ray.getOrigin().getZ();
-        float dx = ray.getDir().getX();
-        float dy = ray.getDir().getY();
-        float dz = ray.getDir().getZ();
-        float cx = sphere.getCenter().getX();
-        float cy = sphere.getCenter().getY();
-        float cz = sphere.getCenter().getZ();
-        float r = sphere.getRadius();
-
-        float a = 1.0f;
-        float b = 2.0f * (dx * (x - cx) + dy * (y - cy) + dz * (z - cz));
-        float c = pow(x - cx, 2) + pow(y - cy, 2) + pow(z - cz, 2) - pow(r, 2);
-        float discriminant = pow(b, 2) - 4.0f * a * c;
-
-        if (discriminant > 0.0f) { // pierces sphere
-            float t1 = (-b + sqrt(discriminant)) / (2.0f * a);
-            float t2 = (-b - sqrt(discriminant)) / (2.0f * a);
-            if (t1 < minT && t1 > 0.0f) {
-                minT = t1;
-                closestSphere = sphere;
-            }
-            if (t2 < minT && t2 > 0.0f) {
-                minT = t2;
-                closestSphere = sphere;
-            }
-        } if (discriminant == 0.0f) { // grazes sphere
-            float t = -b / (2.0f * a);
+    
+    for (Object* obj : objects) {
+        float t = FLT_MAX;
+        if (obj->rayIntersects(ray, t)) {
             if (t < minT && t > 0.0f) {
                 minT = t;
-                closestSphere = sphere;
+                closestObject = obj;
             }
         }
     }
+    if (closestObject != NULL) {
+        color = closestObject->getColor();
+    }
 
-    return closestSphere.getColor();
+    return color;
 }
 
 std::ostream &operator<<(std::ostream& out, const Scene& scene) {
@@ -218,8 +208,9 @@ std::ostream &operator<<(std::ostream& out, const Scene& scene) {
         << "ur: " << scene.ur << std::endl
         << "ll: " << scene.ll << std::endl
         << "lr: " << scene.lr << std::endl;
-    for (const Sphere &s : scene.spheres) {
-        out << s << std::endl;
+    for (Object* obj : scene.objects) {
+        obj->print(out);
+        out << std::endl;
     }
     return out;
 }

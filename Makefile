@@ -23,9 +23,6 @@ Sphere.o: Sphere.cpp Sphere.h Vector3.o Object.o
 Object.o: Object.cpp Object.h
 	$(CXX) $(CXXFLAGS) -c Object.cpp
 
-# Point3.o: Point3.cpp Point3.h
-# 	$(CXX) $(CXXFLAGS) -c Point3.cpp
-
 Ray.o: Ray.cpp Ray.h Vector3.o
 	$(CXX) $(CXXFLAGS) -c Ray.cpp
 

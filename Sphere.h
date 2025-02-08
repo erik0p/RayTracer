@@ -10,9 +10,12 @@ class Sphere : public Object {
         Color color;
     public:
         Sphere(Vector3& center_, float radius_, Color& color_);
+        ~Sphere() override;
 
         const Vector3& getCenter() const { return center; }
         float getRadius() const { return radius; }
         const Color& getColor() const { return color; } 
-        friend std::ostream& operator<<(std::ostream& out, const Sphere& sphere);
+        bool rayIntersects(const Ray& ray, float& minT) const override;
+        void print(std::ostream& out) const;
+        // friend std::ostream& operator<<(std::ostream& out, const Sphere& sphere);
 };

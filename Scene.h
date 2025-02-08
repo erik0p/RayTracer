@@ -3,7 +3,7 @@
 #include <ostream>
 #include "Vector3.h"
 #include "Color.h"
-#include "Sphere.h"
+#include "Object.h"
 #include "Ray.h"
 
 class Scene {
@@ -18,7 +18,7 @@ class Scene {
 
         Color bkgcolor;
         Color mtlcolor;
-        std::vector<Sphere> spheres;
+        std::vector<Object*> objects;
 
         Vector3 ul;
         Vector3 ur;
@@ -33,6 +33,7 @@ class Scene {
        
     public:
         Scene();
+        ~Scene();
 
         const Vector3& getEye() const { return eye; }
         const Vector3& getViewdir() const { return viewdir; }
@@ -42,7 +43,7 @@ class Scene {
         const float& getImgHeight() const { return imgHeight; }
         const Color& getBkgcolor() const { return bkgcolor; }
         const Color& getMtlcolor() const { return mtlcolor; }
-        const std::vector<Sphere> getSpheres() const { return spheres; }
+        const std::vector<Object*> getSpheres() const { return objects; }
         const Vector3& getUl() const { return ul; }
         const Vector3& getUr() const { return ur; }
         const Vector3& getLl() const { return ll; }

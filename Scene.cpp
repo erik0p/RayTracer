@@ -17,7 +17,7 @@ Scene::~Scene() {
     objects.clear();
 }
 
-const double pi = 3.14159265358979323846;
+const double PI = 3.14159265358979323846;
 
 int Scene::initializeScene(std::string fileName) {
     std::ifstream inputFile(fileName);
@@ -125,19 +125,20 @@ int Scene::initializeScene(std::string fileName) {
     inputFile.close();
 
     // initialize v (vertical vector) and u (horizontal vector)
-    viewdir.normalize();
-    updir.normalize();
+    // viewdir.normalize();
+    // updir.normalize();
     u = Vector3::cross(viewdir, updir);
     u.normalize();
-    std::cout << "u " << u << std::endl;
     v = Vector3::cross(u, viewdir);
     v.normalize();
-    std::cout << "v " << v << std::endl;
+    std::cout << "u dot v = " << u.dot(v) << std::endl;
+    std::cout << "u dot viewdir = " << u.dot(viewdir) << std::endl;
+    std::cout << "u dot updir = " << u.dot(updir) << std::endl;
 
     // unit vector in viewdir
     Vector3 n = viewdir.normalized();
 
-    float degToRad = pi / 180.0f;
+    float degToRad = PI / 180.0f;
     float aspectRatio = imgWidth / imgHeight;
     float d = imgHeight / 2.0f / tan(0.5f * vfov * degToRad);
     std::cout << "distance: " << d << std::endl;
@@ -164,13 +165,12 @@ Vector3 Scene::imageToView(int row, int col) {
     // Vector3 v = (ll - ul) / (2.0f * imgHeight);
 
     Vector3 result = ul + deltaH * static_cast<float>(col) + deltaV * static_cast<float>(row);
+        
     return result;
 }
 
 Color Scene::traceRay(const Ray& ray) const {
     Color color = bkgcolor;
-    // Vector3 v;
-    // Sphere closestSphere(v, 0, color);
     Object *closestObject = NULL;
     float minT = FLT_MAX;
     

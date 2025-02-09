@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
 
     if (outputFile.is_open()) {
         outputFile << "P3" << std::endl;
-        outputFile << "# Raycaster" << std::endl;
+        outputFile << "# Raytracer" << std::endl;
         outputFile << scene.getImgWidth() << " " << scene.getImgHeight() << std::endl;
         outputFile << "255" << std::endl;
 
@@ -44,11 +44,16 @@ int main(int argc, char *argv[]) {
                 // std::cout << viewPoint << " ";
                 Vector3 dir = viewPoint - scene.getEye();
                 dir.normalize();
+                // std::cout << dir << " ";
 
                 Vector3 origin = scene.getEye();
                 Ray ray(origin, dir);
 
                 Color pxColor = scene.traceRay(ray);
+                if (viewPoint.getX() == 4.0f){
+                    std::cout << "((((((" << viewPoint << std::endl;
+                    pxColor = Color(0,1,1);
+                }
                 outputFile << pxColor << std::endl;
             }
             // std::cout << std::endl;

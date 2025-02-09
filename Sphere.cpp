@@ -26,10 +26,15 @@ bool Sphere::rayIntersects(const Ray& ray, float& minT) const {
     float r = this->getRadius();
 
     float a = 1.0f;
-    // float a = pow(dx, 2) + pow(dy, 2) + pow(dz, 2);
     float b = 2.0f * (dx * (x - cx) + dy * (y - cy) + dz * (z - cz));
     float c = pow(x - cx, 2) + pow(y - cy, 2) + pow(z - cz, 2) - pow(r, 2);
+    // float b = 2.0f * ray.getDir().dot(ray.getOrigin() - this->getCenter());
+    // float c = (ray.getOrigin() - this->getCenter()).dot(ray.getOrigin() - this->getCenter()) - pow(this->getRadius(), 2);
     float discriminant = pow(b, 2) - 4.0f * a * c;
+    
+    if (discriminant < 0.0f) { // No intersection
+        return false;
+    }
 
     if (discriminant > 0.0f) { // pierces sphere
         float t1 = (-b + sqrt(discriminant)) / (2.0f * a);
@@ -40,16 +45,16 @@ bool Sphere::rayIntersects(const Ray& ray, float& minT) const {
         if (t2 < minT && t2 > 0.0f) {
             minT = t2;
         }
-        return true;
     } else if (discriminant == 0.0f) { // grazes sphere
         float t = -b / (2.0f * a);
         if (t < minT && t > 0.0f)
         {
             minT = t;
         }
-        return true;
+    } else {
+        return false;
     }
-    return false;
+    return true;
 }
 
 void Sphere::print(std::ostream& out) const {

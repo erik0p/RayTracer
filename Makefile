@@ -1,6 +1,6 @@
 CXX=g++
 
-CXXFLAGS=-Wall -g
+CXXFLAGS=-Wall -g -Iinclude
 
 ifeq ($(OS),Windows_NT)
 	RM = del /Q
@@ -8,29 +8,17 @@ else
 	RM = rm -f
 endif
 
-raytracer1a: Render.o Scene.o Sphere.o Ray.o Vector3.o Color.o Object.o
-	$(CXX) $(CXXFLAGS) Render.o Scene.o Sphere.o Object.o Ray.o Vector3.o Color.o -o raytracer1a
+SRCS = $(wildcard src/*.cpp)
+OBJS = $(SRCS:src/%.cpp=%.o)
 
-Render.o: Render.cpp Scene.o Ray.o Vector3.o
-	$(CXX) $(CXXFLAGS) -c Render.cpp
+TARGET = raytracer1a
 
-Scene.o: Scene.cpp Scene.h Ray.o Vector3.o Color.o Sphere.o
-	$(CXX) $(CXXFLAGS) -c Scene.cpp
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $(TARGET)
 
-Sphere.o: Sphere.cpp Sphere.h Vector3.o Object.o
-	$(CXX) $(CXXFLAGS) -c Sphere.cpp
+%.o: src/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-Object.o: Object.cpp Object.h
-	$(CXX) $(CXXFLAGS) -c Object.cpp
-
-Ray.o: Ray.cpp Ray.h Vector3.o
-	$(CXX) $(CXXFLAGS) -c Ray.cpp
-
-Vector3.o: Vector3.cpp Vector3.h
-	$(CXX) $(CXXFLAGS) -c Vector3.cpp
-
-Color.o: Color.cpp Color.h
-	$(CXX) $(CXXFLAGS) -c Color.cpp
-
+.PHONY: clean
 clean:
 	$(RM) *.o *.exe

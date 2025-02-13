@@ -28,8 +28,6 @@ bool Sphere::rayIntersects(const Ray& ray, float& minT) const {
     float a = 1.0f;
     float b = 2.0f * (dx * (x - cx) + dy * (y - cy) + dz * (z - cz));
     float c = pow(x - cx, 2) + pow(y - cy, 2) + pow(z - cz, 2) - pow(r, 2);
-    // float b = 2.0f * ray.getDir().dot(ray.getOrigin() - this->getCenter());
-    // float c = (ray.getOrigin() - this->getCenter()).dot(ray.getOrigin() - this->getCenter()) - pow(this->getRadius(), 2);
     float discriminant = pow(b, 2) - 4.0f * a * c;
     
     if (discriminant < 0.0f) { // No intersection
@@ -64,10 +62,10 @@ void Sphere::print(std::ostream& out) const {
         << " color: " << color;
 }
 
-// std::ostream& operator<<(std::ostream& out, const Sphere& sphere) {
-//     out <<"sphere: "
-//         << "center: " << sphere.center
-//         << " radius: " << sphere.radius
-//         << " color: " << sphere.color;
-//     return out;
-// }
+std::ostream& operator<<(std::ostream& out, const Sphere& sphere) {
+    out <<"sphere: "
+        << "center: " << sphere.center
+        << " radius: " << sphere.radius
+        << " color: " << sphere.color;
+    return out;
+}

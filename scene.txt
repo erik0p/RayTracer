@@ -1,9 +1,0 @@
-eye 0 0 0
-viewdir 0 0 1
-updir 0 1 0
-vfov 90
-imsize 100 100
-bkgcolor .2 .2 .2
-
-mtlcolor 0.0 1.0 0.0
-sphere 0 0 3 2 

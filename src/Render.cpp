@@ -1,12 +1,10 @@
+#include "Utils.h"
 #include "Ray.h"
 #include "Scene.h"
 #include "Vector3.h"
 #include <fstream>
+#include <string>
 #include <iostream>
-
-std::string truncateSuffix(std::string str) {
-    return str.erase(str.length() - 4, str.length());
-}
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -20,14 +18,14 @@ int main(int argc, char *argv[]) {
     // Get file name provided from command line
     std::string fileName = argv[1];
     Scene scene;
-    if (scene.initializeScene(fileName) == -1) {
+    if (scene.initializeScene(fileName) == -1) { // check file was read successfully
         std::cout << "Unable to read file" << std::endl;
         return 0;
     }
     std::cout << scene;
 
     // Remove .txt from file name
-    std::string truncatedName = truncateSuffix(fileName);
+    std::string truncatedName = utils::truncateSuffix(fileName);
     // Create .ppm file
     std::ofstream outputFile(truncatedName + ".ppm");
 
@@ -37,6 +35,7 @@ int main(int argc, char *argv[]) {
         outputFile << scene.getImgWidth() << " " << scene.getImgHeight() << std::endl;
         outputFile << "255" << std::endl;
 
+        // Color in each pixel in the image
         for (int row = 0; row < scene.getImgHeight(); row++) {
             for (int col = 0; col < scene.getImgWidth(); col++) {
                 
@@ -50,10 +49,6 @@ int main(int argc, char *argv[]) {
                 Ray ray(origin, dir);
 
                 Color pxColor = scene.traceRay(ray);
-                if (viewPoint.getX() == 4.0f){
-                    std::cout << "((((((" << viewPoint << std::endl;
-                    pxColor = Color(0,1,1);
-                }
                 outputFile << pxColor << std::endl;
             }
             // std::cout << std::endl;

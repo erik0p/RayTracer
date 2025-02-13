@@ -70,6 +70,10 @@ float Vector3::distanceBetween(const Vector3& v1, const Vector3& v2) {
             );
 }
 
+bool Vector3::equals(const Vector3& v) const {
+    return (x == v.x && y == v.y && z == v.z);
+}
+
 Vector3 Vector3::add(const Vector3& v1, const Vector3& v2) {
     return Vector3(
             v1.x + v2.x,

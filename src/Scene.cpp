@@ -2,6 +2,7 @@
 #include "Ray.h"
 #include "Sphere.h"
 #include "Vector3.h"
+#include "Utils.h"
 #include <cfloat>
 #include <cmath>
 #include <fstream>
@@ -16,8 +17,6 @@ Scene::~Scene() {
     }
     objects.clear();
 }
-
-const double PI = 3.14159265358979323846;
 
 int Scene::initializeScene(std::string fileName) {
     std::ifstream inputFile(fileName);
@@ -117,7 +116,10 @@ int Scene::initializeScene(std::string fileName) {
                 Color color = mtlcolor;
                 Sphere* sphere = new Sphere(center, r, color);
                 objects.push_back(sphere);
-            }
+            } else if (!utils::containsWhiteSpaceOrEmpty(keyword)) {
+                std::cout << keyword << " is not a valid keyword" << std::endl;
+                return -1;
+            } 
         }
     } else {
         return -1;
@@ -125,44 +127,47 @@ int Scene::initializeScene(std::string fileName) {
     inputFile.close();
 
     // initialize v (vertical vector) and u (horizontal vector)
-    // viewdir.normalize();
-    // updir.normalize();
+    viewdir.normalize();
+    // std::cout << "up dir before " << updir << std::endl;
+    updir.normalize();
+    // std::cout << "up dir after " << updir << std::endl;
+
     u = Vector3::cross(viewdir, updir);
+    // std::cout << "u before " << u << std::endl;
     u.normalize();
+    // std::cout << "u after " << u << std::endl;
+    // std::cout << "viewdir before computing v: " << viewdir << std::endl;
     v = Vector3::cross(u, viewdir);
+    // std::cout << "v before " << v << std::endl;
     v.normalize();
-    std::cout << "u dot v = " << u.dot(v) << std::endl;
-    std::cout << "u dot viewdir = " << u.dot(viewdir) << std::endl;
-    std::cout << "u dot updir = " << u.dot(updir) << std::endl;
+    // std::cout << "v after " << v << std::endl;
 
+    // std::cout << "viewdir dot updir: " << viewdir.dot(updir) << std::endl;
     // unit vector in viewdir
-    Vector3 n = viewdir.normalized();
+    Vector3 n = viewdir;
 
-    float degToRad = PI / 180.0f;
     float aspectRatio = imgWidth / imgHeight;
-    float d = imgHeight / 2.0f / tan(0.5f * vfov * degToRad);
-    std::cout << "distance: " << d << std::endl;
-    viewHeight = 2.0f * d * tan(0.5f * vfov * degToRad);
+    float d = 1.0f;
+    viewHeight = 2.0f * d * tan(utils::degToRad(0.5f * vfov));
     viewWidth = viewHeight * aspectRatio;
 
-    std::cout << "view: " << viewHeight / viewWidth << std::endl;
-    std::cout << "image: " << imgHeight / imgWidth << std::endl;
+    std::cout << "view aspect ratio: " << viewWidth / viewHeight << std::endl;
+    std::cout << "image aspect ratio: " << aspectRatio << std::endl;
 
+    // Find the point of each corner in the view window
+    // +-*/ operators are overloaded to work with Vector3
     ul = eye + d * n - (viewWidth / 2.0f) * u + (viewHeight / 2.0f) * v;
     ur = eye + d * n + (viewWidth / 2.0f) * u + (viewHeight / 2.0f) * v;
     ll = eye + d * n - (viewWidth / 2.0f) * u - (viewHeight / 2.0f) * v;
     lr = eye + d * n + (viewWidth / 2.0f) * u - (viewHeight / 2.0f) * v;
-
+    
     return 0;
 }
 
+// Go from image row and col to a point in view space
 Vector3 Scene::imageToView(int row, int col) {
     Vector3 deltaH = (ur - ul) / (imgWidth - 1.0f);
     Vector3 deltaV = (ll - ul) / (imgHeight - 1.0f);
-    // Vector3 deltaH = (ur - ul) / (imgWidth);
-    // Vector3 deltaV = (ll - ul) / (imgHeight);
-    // Vector3 h = (ur - ul) / (2.0f * imgWidth);
-    // Vector3 v = (ll - ul) / (2.0f * imgHeight);
 
     Vector3 result = ul + deltaH * static_cast<float>(col) + deltaV * static_cast<float>(row);
         
@@ -174,6 +179,7 @@ Color Scene::traceRay(const Ray& ray) const {
     Object *closestObject = NULL;
     float minT = FLT_MAX;
     
+    // iterate through objects in the scene and find the object whose interesection is closest, if any
     for (Object* obj : objects) {
         float t = FLT_MAX;
         if (obj->rayIntersects(ray, t)) {
@@ -183,6 +189,8 @@ Color Scene::traceRay(const Ray& ray) const {
             }
         }
     }
+
+    // get color of object if there was an intersection
     if (closestObject != NULL) {
         color = closestObject->getColor();
     }

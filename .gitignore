@@ -2,3 +2,4 @@
 *.exe
 *.ppm
 *.vs
+.vscode

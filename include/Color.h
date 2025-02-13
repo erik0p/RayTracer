@@ -31,6 +31,7 @@ class Color {
          * @param c1 first color to interpolate between
          * @param c2 second color to interpolate between
          * @param t the amount to interpolate by
+         * 
          * @return the color resulting from interpolating between c1 and c2 by amount t
          */
         static Color lerp(const Color& c1, const Color& c2, float t);

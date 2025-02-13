@@ -53,8 +53,39 @@ class Scene {
         const float& getViewHeight() const { return viewHeight; }
         const float& getViewWidth() const { return viewWidth; }
 
+        /*
+         * reads in a file and intializes the fields using data from the file
+         *
+         * @param fileName name of the file to read
+         * 
+         * @return 0 if successfully read file and -1 if unsuccessful
+         */
         int initializeScene(std::string fileName);
+
+        /*
+         * traces a ray from its origin to a point in the view window and determines the color of the pixel hit by the ray
+         *
+         * @param ray the ray to trace
+         * 
+         * @return the color of the pixel hit by the ray
+         */
         Color traceRay(const Ray& ray) const;
+
+        /*
+         * converts a row and col in an image to a 3d location in the view space
+         *
+         * @param row the row of the image
+         * @param col the col of the image
+         * 
+         * @return a vector representing the position in view space from the pixels row col
+         */
         Vector3 imageToView(int row, int col);
+
+        /*
+         * Overload the out stream operator to print a scene
+         *
+         * @param out the outstream
+         * @param scene the scene whose fields are printed
+         */
         friend std::ostream& operator<<(std::ostream& out, const Scene& scene);
 };

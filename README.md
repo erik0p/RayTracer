@@ -1,7 +1,7 @@
 # RayTracer
 
 # Overview
-This program takes the name of a scene description file and outputs a `.ppm` file. The program has basic raytracing functionality. It can render spheres and cast rays into the scene to determine of a ray intersects with a sphere. the file should contain the following information:
+This program takes the name of a scene description file and outputs a `.ppm` file. The program has basic raytracing functionality. It can render spheres, and cast rays into the scene to determine if a ray intersects with a sphere. the file should contain the following information:
 ```
 imsize width height
 eye x y z
@@ -32,3 +32,4 @@ Run the following commands
 make
 ./raytracer1a input/scene.txt
 ```
+The output file will be in the same location where the input file is.

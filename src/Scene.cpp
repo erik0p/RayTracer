@@ -128,21 +128,13 @@ int Scene::initializeScene(std::string fileName) {
 
     // initialize v (vertical vector) and u (horizontal vector)
     viewdir.normalize();
-    // std::cout << "up dir before " << updir << std::endl;
     updir.normalize();
-    // std::cout << "up dir after " << updir << std::endl;
 
     u = Vector3::cross(viewdir, updir);
-    // std::cout << "u before " << u << std::endl;
     u.normalize();
-    // std::cout << "u after " << u << std::endl;
-    // std::cout << "viewdir before computing v: " << viewdir << std::endl;
     v = Vector3::cross(u, viewdir);
-    // std::cout << "v before " << v << std::endl;
     v.normalize();
-    // std::cout << "v after " << v << std::endl;
 
-    // std::cout << "viewdir dot updir: " << viewdir.dot(updir) << std::endl;
     // unit vector in viewdir
     Vector3 n = viewdir;
 

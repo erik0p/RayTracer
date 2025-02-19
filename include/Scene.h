@@ -2,9 +2,10 @@
 #include <vector>
 #include <ostream>
 #include "Vector3.h"
-#include "Color.h"
-#include "Object.h"
+#include "Material.h"
+#include "Sphere.h"
 #include "Ray.h"
+#include "Light.h"
 
 class Scene {
     private:
@@ -17,8 +18,10 @@ class Scene {
         float imgHeight;
 
         Color bkgcolor;
-        Color mtlcolor;
-        std::vector<Object*> objects;
+        // Color mtlcolor;
+        Material mtlcolor;
+        std::vector<Sphere*> objects;
+        std::vector<Light*> lights;
 
         Vector3 ul;
         Vector3 ur;
@@ -42,14 +45,15 @@ class Scene {
         const float& getImgWidth() const { return imgWidth; }
         const float& getImgHeight() const { return imgHeight; }
         const Color& getBkgcolor() const { return bkgcolor; }
-        const Color& getMtlcolor() const { return mtlcolor; }
-        const std::vector<Object*> getSpheres() const { return objects; }
+        const Material& getMtlcolor() const { return mtlcolor; }
+        const std::vector<Sphere*> getSpheres() const { return objects; }
         const Vector3& getUl() const { return ul; }
         const Vector3& getUr() const { return ur; }
         const Vector3& getLl() const { return ll; }
         const Vector3& getLr() const { return lr; }
         const Vector3& getV() const { return v; }
         const Vector3& getU() const { return u; }
+        const std::vector<Light*> getLights() const { return lights; }
         const float& getViewHeight() const { return viewHeight; }
         const float& getViewWidth() const { return viewWidth; }
 
@@ -79,7 +83,7 @@ class Scene {
          * 
          * @return a vector representing the position in view space from the pixels row col
          */
-        Vector3 imageToView(int row, int col);
+        Vector3 imageToView(int row, int col) const;
 
         /*
          * Overload the out stream operator to print a scene
@@ -87,5 +91,8 @@ class Scene {
          * @param out the outstream
          * @param scene the scene whose fields are printed
          */
+
+        Color shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Sphere& intersectedSphere) const;
+        float traceShadow(const Ray& ray, const Sphere& originSphere, const Light& light) const;
         friend std::ostream& operator<<(std::ostream& out, const Scene& scene);
 };

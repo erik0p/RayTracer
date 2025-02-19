@@ -37,6 +37,36 @@ class Color {
         static Color lerp(const Color& c1, const Color& c2, float t);
 
         /*
+         * overload the addition operator for color addition
+         *
+         * @param c a color
+         *
+         * @return result of adding c to the color
+         */
+        Color operator+(const Color& c) const;
+
+        /*
+         * overload the multiplication operator for color scalar multiplication where the scalar comes first
+         *
+         * @param scalar the scalar value
+         * @param rhs the rhs color
+         *
+         * @return the result of multiplying the color by a scalar
+         */
+        friend Color operator*(const float &scalar, const Color &rhs);
+
+        /*
+         * overload the multiplication operator for color scalar multiplication
+         *
+         * @param scalar the scalar value
+         *
+         * @return the result of multiplying the color by a scalar
+         */
+        Color operator*(const float &scalar);
+
+        void clamp();
+
+        /*
          * Overload the out stream operator to print the RGB values in a format usable by .ppm files
          *
          * @param out the outstream

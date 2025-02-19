@@ -3,19 +3,25 @@
 #include "Sphere.h"
 #include "Vector3.h"
 #include "Utils.h"
+#include "Light.h"
 #include <cfloat>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 
 Scene::Scene() {}
 Scene::~Scene() {
-    for (Object* obj : objects) {
-        delete obj;
+    for (Sphere* sphere : objects) {
+        delete sphere;
     }
     objects.clear();
+    for (Light* light : lights) {
+        delete light;
+    }
+    lights.clear();
 }
 
 int Scene::initializeScene(std::string fileName) {
@@ -92,15 +98,23 @@ int Scene::initializeScene(std::string fileName) {
                 bkgcolor = Color(r, g, b);
 
             } else if (keyword.compare("mtlcolor") == 0) {
-                float r, g, b;
-                ss >> r;
-                ss >> g;
-                ss >> b;
+                float odr, odg, odb, osr, osg, osd, ka, kd, ks, n;
+                ss >> odr;
+                ss >> odg;
+                ss >> odb;
+                ss >> osr;
+                ss >> osg;
+                ss >> osd;
+                ss >> ka;
+                ss >> kd;
+                ss >> ks;
+                ss >> n;
                 if (ss.fail()) {
-                    std::cout << "Invalid input for mtlcolor parameter. Must provide three floats 'mtlcolor r g b'" << std::endl;
+                    std::cout << "Invalid input for mtlcolor parameter. " <<
+                    "Must provide 10 floats 'mtlcolor odr odg odb osr osg osb ka kd ks n'" << std::endl;
                     return -1;
                 }
-                mtlcolor = Color(r, g, b);
+                mtlcolor = Material(Color(odr, odg, odb), Color(osr, osg, osd), ka, kd, ks, n);
 
             } else if (keyword.compare("sphere") == 0) {
                 float x, y, z, r;
@@ -113,9 +127,23 @@ int Scene::initializeScene(std::string fileName) {
                     return -1;
                 }
                 Vector3 center(x, y, z);
-                Color color = mtlcolor;
-                Sphere* sphere = new Sphere(center, r, color);
+                Material material = mtlcolor;
+                Sphere* sphere = new Sphere(center, r, material);
                 objects.push_back(sphere);
+            } else if (keyword.compare("light") == 0) {
+                float x, y, z, i;
+                int w;
+                ss >> x;
+                ss >> y;
+                ss >> z;
+                ss >> w;
+                ss >> i;
+                if (ss.fail()) {
+                    std::cout << "Invalid input for light parameter. Must provide 5 floats 'light x y z w i'" << std::endl;
+                    return -1;
+                }
+                Light* light = new Light(Vector3(x, y, z), w, i);
+                lights.push_back(light);
             } else if (!utils::containsWhiteSpaceOrEmpty(keyword)) {
                 std::cout << keyword << " is not a valid keyword" << std::endl;
                 return -1;
@@ -157,7 +185,7 @@ int Scene::initializeScene(std::string fileName) {
 }
 
 // Go from image row and col to a point in view space
-Vector3 Scene::imageToView(int row, int col) {
+Vector3 Scene::imageToView(int row, int col) const {
     Vector3 deltaH = (ur - ul) / (imgWidth - 1.0f);
     Vector3 deltaV = (ll - ul) / (imgHeight - 1.0f);
 
@@ -168,26 +196,114 @@ Vector3 Scene::imageToView(int row, int col) {
 
 Color Scene::traceRay(const Ray& ray) const {
     Color color = bkgcolor;
-    Object *closestObject = NULL;
+    Sphere *closestObject = NULL;
     float minT = FLT_MAX;
     
     // iterate through objects in the scene and find the object whose interesection is closest, if any
-    for (Object* obj : objects) {
+    for (Sphere* sphere : objects) {
         float t = FLT_MAX;
-        if (obj->rayIntersects(ray, t)) {
+        if (sphere->rayIntersects(ray, t)) {
             if (t < minT && t > 0.0f) {
                 minT = t;
-                closestObject = obj;
+                closestObject = sphere;
             }
         }
     }
 
     // get color of object if there was an intersection
     if (closestObject != NULL) {
-        color = closestObject->getColor();
+        // color = closestObject->getMaterial().getDiffuseColor();
+        Vector3 intersectionPoint;
+        intersectionPoint = ray.getOrigin() + minT * ray.getDir();
+        color = shadeRay(ray, closestObject->getMaterial(), intersectionPoint, *closestObject);
     }
 
     return color;
+}
+
+Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Sphere& intersectedSphere) const {
+    Color colorResult;
+    float ka = material.getKa();
+    float kd = material.getKd();
+    float ks = material.getKs();
+    float n = material.getN();
+    Color diffuseColor = material.getDiffuseColor();
+    Color specularColor = material.getSpecularColor();
+    Color localIllumination(0.0f, 0.0f, 0.0f);
+
+    for (Light *light : lights)
+    {
+
+        Vector3 L; // vector pointing towards light source
+        Vector3 N; // surface normal
+        Vector3 H; // direction halfway between light and direction towards the viewer
+        Vector3 V;
+        float shadowFlag = 1.0f;
+
+        if (light->isDirectionalLight())
+        {
+            L = -1 * light->getDir();
+            L.normalize();
+            // std::cout<< "light dir: " << L << std::endl;
+        } else { // point light
+            L = light->getDir() - intersectionPoint;
+            L.normalize();
+        }
+
+        Ray shadowRay(intersectionPoint, L);
+        shadowFlag = traceShadow(shadowRay, intersectedSphere, *light);
+        // std::cout << "shadowflag: " << shadowFlag << std::endl;
+
+        N = (intersectionPoint - intersectedSphere.getCenter()) / intersectedSphere.getRadius();
+        N.normalize();
+
+        V = ray.getOrigin() - intersectionPoint;
+        V.normalize();
+
+        H = (L + V) / 2.0f;
+        H.normalize();
+
+        localIllumination = localIllumination + (shadowFlag * (kd * diffuseColor * std::max(0.0f, (N.dot(L))) + ks * specularColor * pow(std::max(0.0f, (N.dot(H))), n)));
+    }
+    colorResult = ka * diffuseColor + localIllumination;
+    colorResult.clamp();
+
+    return colorResult;
+}
+
+float Scene::traceShadow(const Ray& ray, const Sphere& originSphere, const Light& light) const {
+    float shadowFlag = 1.0f;
+    
+    // iterate through objects in the scene and find the object whose interesection is closest, if any
+    for (Sphere* sphere : objects) {
+        float t = FLT_MAX;
+
+        if (!sphere->equals(originSphere)) { // don't check the sphere where the shadow ray originates
+            // std::cout << "t before: " << t << std::endl;
+            if (sphere->rayIntersects(ray, t)) {
+            // std::cout << "t after: " << t << std::endl;
+
+                if (t > 0.0f) {
+                    if (light.isDirectionalLight()) {
+                        shadowFlag = 0.0f;
+                    } else {
+
+                        float distance = Vector3::distanceBetween(ray.getOrigin(), light.getDir());
+                        // std::cout << "distance: " << distance << std::endl;
+                        // std::cout << "t: " << t << std::endl;
+                        if (!light.isDirectionalLight() && t > distance)
+                        { // check if object is on other side of point light
+                            shadowFlag = 1.0f;
+                        } else {
+                            shadowFlag = 0.0f;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return shadowFlag;
 }
 
 std::ostream &operator<<(std::ostream& out, const Scene& scene) {
@@ -208,9 +324,11 @@ std::ostream &operator<<(std::ostream& out, const Scene& scene) {
         << "ur: " << scene.ur << std::endl
         << "ll: " << scene.ll << std::endl
         << "lr: " << scene.lr << std::endl;
-    for (Object* obj : scene.objects) {
-        obj->print(out);
-        out << std::endl;
+    for (Sphere* sphere : scene.objects) {
+        out << *sphere << std::endl;
+    }
+    for (Light* light : scene.lights) {
+        out << *light << std::endl;
     }
     return out;
 }

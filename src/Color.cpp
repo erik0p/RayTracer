@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Color.h"
+#include <algorithm>
 
 Color::Color() {
     r = 0.0f;
@@ -29,6 +30,23 @@ Color Color::lerp(const Color& c1, const Color& c2, float t) {
     float b_ = c1.getB() + t * (c2.getB() - c1.getB());
 
     return Color(r_, g_, b_);
+}
+Color Color::operator+(const Color& c) const {
+    return Color(r + c.r, g + c.g, b + c.b);
+}
+
+Color operator*(const float& scalar, const Color& rhs) {
+    return Color(rhs.r * scalar, rhs.g * scalar, rhs.b * scalar);
+}
+
+Color Color::operator*(const float& scalar) {
+    return Color(r * scalar, g * scalar, b * scalar);
+}
+
+void Color::clamp() {
+    std::clamp(r, 0.0f, 1.0f);
+    std::clamp(g, 0.0f, 1.0f);
+    std::clamp(b, 0.0f, 1.0f);
 }
 
 std::ostream& operator<<(std::ostream& out, const Color& color) {

@@ -7,7 +7,7 @@ Ray::Ray() {
     dir = Vector3::UP;
 }
 
-Ray::Ray(Vector3& origin_, Vector3& dir_) {
+Ray::Ray(const Vector3& origin_, const Vector3& dir_) {
     origin = origin_;
     dir = dir_;
 }

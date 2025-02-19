@@ -1,13 +1,13 @@
 #pragma once
 #include "Vector3.h"
-#include "Object.h"
-#include "Color.h"
+#include "Material.h"
+#include "Ray.h"
 
-class Sphere : public Object {
+class Sphere {
     private:
         Vector3 center;
         float radius;
-        Color color;
+        Material material;
     public:
 
         /*
@@ -17,12 +17,13 @@ class Sphere : public Object {
          * @param radius_ radius of the sphere
          * @param color_ the color the sphere has
          */
-        Sphere(Vector3& center_, float radius_, Color& color_);
-        ~Sphere() override;
+        Sphere(Vector3& center_, float radius_, Material& material_);
+        ~Sphere();
 
         const Vector3& getCenter() const { return center; }
         float getRadius() const { return radius; }
-        const Color& getColor() const { return color; } 
+        // const Color& getColor() const { return color; } 
+        const Material& getMaterial() const { return material; }
 
         /*
          * Tests if a ray interesects a sphere and stores the minimum distance the intersection occured at.
@@ -32,7 +33,9 @@ class Sphere : public Object {
          * 
          * @return true if the ray interects the sphere
          */
-        bool rayIntersects(const Ray& ray, float& minT) const override;
+        bool rayIntersects(const Ray& ray, float& minT) const;
+
+        bool equals(const Sphere& s) const;
 
         /*
          * Appends to the outstream

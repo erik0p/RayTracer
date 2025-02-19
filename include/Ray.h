@@ -14,7 +14,7 @@ class Ray {
          * @param origin_ the origin point of the ray
          * @param dir_ the direction of the ray
          */
-        Ray(Vector3& origin_, Vector3& dir_);
+        Ray(const Vector3& origin_, const Vector3& dir_);
 
         const Vector3& getOrigin() const { return origin; }
         const Vector3& getDir() const { return dir; }

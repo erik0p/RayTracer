@@ -296,9 +296,9 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
         if (!dynamic_cast<DirectionalLight*>(light)) { // Check if point light
             // std::cout << " L " << L << std::endl;
             for (int i = 0; i < numberOfJitteredRays; i++) {
-                Vector3 jitteredLocation = jitterLocation(light->getDir(), jitterAmount);
+                Vector3 jitteredLocation = jitterLocation(light->getDirOrCenter(), jitterAmount);
                 PointLight jitteredLight = PointLight(jitteredLocation, light->getIntensity());
-                Vector3 dirToLight = jitteredLight.getDir() - intersectionPoint;
+                Vector3 dirToLight = jitteredLight.getDirOrCenter() - intersectionPoint;
                 dirToLight.normalize();
 
                 // std::cout << "Jitter L " << dirToLight << std::endl;
@@ -327,7 +327,7 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
         localIllumination = localIllumination + (shadowFlag * (kd * diffuseColor * std::max(0.0f, (N.dot(L))) + ks * specularColor * pow(std::max(0.0f, (N.dot(H))), n)));
 
         if (AttenuationLight* attLight = dynamic_cast<AttenuationLight*>(light)) {
-            float distance = Vector3::distanceBetween(intersectionPoint, light->getDir());
+            float distance = Vector3::distanceBetween(intersectionPoint, light->getDirOrCenter());
             float att = attLight->attenuation(distance);
             // std::cout << "att : " << att << std::endl;
             // std::cout << "distance : " << distance << std::endl;
@@ -362,7 +362,7 @@ float Scene::traceShadow(const Ray& ray, const Sphere& originSphere, Light& ligh
                     if (dynamic_cast<DirectionalLight*>(&light)) {
                         shadowFlag = 0.0f;
                     } else {
-                        float distance = Vector3::distanceBetween(ray.getOrigin(), light.getDir());
+                        float distance = Vector3::distanceBetween(ray.getOrigin(), light.getDirOrCenter());
 
                         if (t > distance) {
                             shadowFlag = 1.0f;

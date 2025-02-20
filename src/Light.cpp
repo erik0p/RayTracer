@@ -8,18 +8,14 @@ Light::Light() {
     dir = Vector3();
 }
 
-Light::Light(const Vector3& dir_, int type_, float intensity_) {
+Light::Light(const Vector3& dir_, float intensity_) {
     dir = dir_;
-    type = type_;
     intensity = intensity_;
 }
 
-bool Light::isDirectionalLight() const {
-    return type == 0;
-}
 
 std::ostream& operator<<(std::ostream& out, const Light& light) {
-    out << "light: " << "dir: " << light.dir << " type: " << light.type
+    out << "light: " << "dir: " << light.dir
     << " intensity: " << light.intensity; 
     return out;
 }

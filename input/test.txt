@@ -1,16 +1,14 @@
-imsize 8012 8012
+imsize 512 512
 eye 0 0 0 
 viewdir 0 0 -1
 vfov 90 
 updir 0 1 0
 
-light -3 0 5 1 1
+attlight 1 0 0 1 1 0 0 1
 bkgcolor 0 0 0
 
+depthcueing 0 0 0 0.1 1 2 5
 
 
-mtlcolor 0 1 0 1 1 1 0.1 0.4 0.6 100 
-sphere 0 0 -20 3
-
-mtlcolor 1 1 0 1 1 1 0.1 0.4 0.6 100 
-sphere 4 0 -25 2
+mtlcolor 0 1 1 1 1 1 0.1 0.9 0 1 
+sphere 0 0 -1.5 1

@@ -6,6 +6,7 @@
 #include "Sphere.h"
 #include "Ray.h"
 #include "Light.h"
+#include "DepthCueing.h"
 
 class Scene {
     private:
@@ -22,6 +23,11 @@ class Scene {
         Material mtlcolor;
         std::vector<Sphere*> objects;
         std::vector<Light*> lights;
+
+        DepthCueing depthCue;
+        bool depthCueingFlag;
+
+
 
         Vector3 ul;
         Vector3 ur;
@@ -93,6 +99,7 @@ class Scene {
          */
 
         Color shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Sphere& intersectedSphere) const;
-        float traceShadow(const Ray& ray, const Sphere& originSphere, const Light& light) const;
+        float traceShadow(const Ray& ray, const Sphere& originSphere, Light& light) const;
+        Vector3 jitterLocation(const Vector3& location, float jitterAmount) const;
         friend std::ostream& operator<<(std::ostream& out, const Scene& scene);
 };

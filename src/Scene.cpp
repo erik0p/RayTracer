@@ -1,9 +1,13 @@
 #include "Scene.h"
+#include "PointLight.h"
+#include "DirectionalLight.h"
+#include "AttenuationLight.h"
 #include "Ray.h"
 #include "Sphere.h"
 #include "Vector3.h"
 #include "Utils.h"
 #include "Light.h"
+#include "DepthCueing.h"
 #include <cfloat>
 #include <cmath>
 #include <fstream>
@@ -11,6 +15,7 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
+#include <random>
 
 Scene::Scene() {}
 Scene::~Scene() {
@@ -27,6 +32,9 @@ Scene::~Scene() {
 int Scene::initializeScene(std::string fileName) {
     std::ifstream inputFile(fileName);
     std::string read;
+
+    // initialize flags
+    depthCueingFlag = false;
 
     if (inputFile.is_open()) {
         while (std::getline(inputFile, read)) {
@@ -115,7 +123,6 @@ int Scene::initializeScene(std::string fileName) {
                     return -1;
                 }
                 mtlcolor = Material(Color(odr, odg, odb), Color(osr, osg, osd), ka, kd, ks, n);
-
             } else if (keyword.compare("sphere") == 0) {
                 float x, y, z, r;
                 ss >> x;
@@ -142,7 +149,44 @@ int Scene::initializeScene(std::string fileName) {
                     std::cout << "Invalid input for light parameter. Must provide 5 floats 'light x y z w i'" << std::endl;
                     return -1;
                 }
-                Light* light = new Light(Vector3(x, y, z), w, i);
+                Light* light;
+                if (w == 1) {
+                    light = new PointLight(Vector3(x, y, z), i);
+                } else {
+                    light = new DirectionalLight(Vector3(x, y, z), i);
+                }
+                lights.push_back(light);
+            } else if (keyword.compare("depthcueing") == 0) {
+                float r, g, b, aMin, aMax, distMin, distMax;
+                ss >> r;
+                ss >> g;
+                ss >> b;
+                ss >> aMin;
+                ss >> aMax;
+                ss >> distMin;
+                ss >> distMax;
+                if (ss.fail()) {
+                    std::cout << "Invalid input for depthcueing parameter. Must provide 7 floats 'depthcueing r g b aMin aMax distMin distMax'" << std::endl;
+                    return -1;
+                }
+                Color color = Color(r, g, b);
+                depthCue = DepthCueing(color, aMin, aMax, distMin, distMax);
+                depthCueingFlag = true;
+            } else if (keyword.compare("attlight") == 0) {
+                float x, y, z, w, i, c1, c2, c3;
+                ss >> x;
+                ss >> y;
+                ss >> z;
+                ss >> w;
+                ss >> i;
+                ss >> c1;
+                ss >> c2;
+                ss >> c3;
+                if (ss.fail()) {
+                    std::cout << "Invalid input for attlight parameter. Must provide 8 floats 'attlight x y z w i c1 c2 c3'" << std::endl;
+                    return -1;
+                }
+                Light* light = new AttenuationLight(Vector3(x, y, z), i, c1, c2 ,c3);
                 lights.push_back(light);
             } else if (!utils::containsWhiteSpaceOrEmpty(keyword)) {
                 std::cout << keyword << " is not a valid keyword" << std::endl;
@@ -230,6 +274,8 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
     Color diffuseColor = material.getDiffuseColor();
     Color specularColor = material.getSpecularColor();
     Color localIllumination(0.0f, 0.0f, 0.0f);
+    int numberOfJitteredRays = 50;
+    float jitterAmount = 0.01f;
 
     for (Light *light : lights)
     {
@@ -240,19 +286,34 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
         Vector3 V;
         float shadowFlag = 1.0f;
 
-        if (light->isDirectionalLight())
-        {
-            L = -1 * light->getDir();
-            L.normalize();
-            // std::cout<< "light dir: " << L << std::endl;
-        } else { // point light
-            L = light->getDir() - intersectionPoint;
-            L.normalize();
-        }
+        L = light->getDirToSource(intersectionPoint);
+        L.normalize();
 
-        Ray shadowRay(intersectionPoint, L);
-        shadowFlag = traceShadow(shadowRay, intersectedSphere, *light);
+
         // std::cout << "shadowflag: " << shadowFlag << std::endl;
+        // light->printInfo();
+
+        if (PointLight* ptLight = dynamic_cast<PointLight*>(light)) {
+            // std::cout << " L " << L << std::endl;
+            for (int i = 0; i < numberOfJitteredRays; i++) {
+                Vector3 jitteredLocation = jitterLocation(ptLight->getDir(), jitterAmount);
+                PointLight jitteredLight = PointLight(jitteredLocation, ptLight->getIntensity());
+                Vector3 dirToLight = jitteredLight.getDir() - intersectionPoint;
+                dirToLight.normalize();
+
+                // std::cout << "Jitter L " << dirToLight << std::endl;
+                // std::cout << " jitter light ";
+                // jitteredLight.printInfo();
+
+                Ray shadowRay(intersectionPoint, dirToLight);
+                shadowFlag += traceShadow(shadowRay, intersectedSphere, jitteredLight);
+            }
+            shadowFlag = shadowFlag / numberOfJitteredRays;
+            // std::cout << "shadowflag: " << shadowFlag << std::endl;
+        } else {
+            Ray shadowRay(intersectionPoint, L);
+            shadowFlag = traceShadow(shadowRay, intersectedSphere, *light);
+        }
 
         N = (intersectionPoint - intersectedSphere.getCenter()) / intersectedSphere.getRadius();
         N.normalize();
@@ -264,14 +325,28 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
         H.normalize();
 
         localIllumination = localIllumination + (shadowFlag * (kd * diffuseColor * std::max(0.0f, (N.dot(L))) + ks * specularColor * pow(std::max(0.0f, (N.dot(H))), n)));
+
+        if (AttenuationLight* attLight = dynamic_cast<AttenuationLight*>(light)) {
+            float distance = Vector3::distanceBetween(intersectionPoint, light->getDir());
+            float att = attLight->attenuation(distance);
+            // std::cout << "att : " << att << std::endl;
+            // std::cout << "distance : " << distance << std::endl;
+            localIllumination = localIllumination * att;
+        }
     }
     colorResult = ka * diffuseColor + localIllumination;
+
+    if (depthCueingFlag) {
+        float distance = Vector3::distanceBetween(eye, intersectionPoint);
+        colorResult = depthCue.applyDepthCueing(colorResult, distance);
+    }
+
     colorResult.clamp();
 
     return colorResult;
 }
 
-float Scene::traceShadow(const Ray& ray, const Sphere& originSphere, const Light& light) const {
+float Scene::traceShadow(const Ray& ray, const Sphere& originSphere, Light& light) const {
     float shadowFlag = 1.0f;
     
     // iterate through objects in the scene and find the object whose interesection is closest, if any
@@ -284,15 +359,12 @@ float Scene::traceShadow(const Ray& ray, const Sphere& originSphere, const Light
             // std::cout << "t after: " << t << std::endl;
 
                 if (t > 0.0f) {
-                    if (light.isDirectionalLight()) {
+                    if (dynamic_cast<DirectionalLight*>(&light)) {
                         shadowFlag = 0.0f;
                     } else {
-
                         float distance = Vector3::distanceBetween(ray.getOrigin(), light.getDir());
-                        // std::cout << "distance: " << distance << std::endl;
-                        // std::cout << "t: " << t << std::endl;
-                        if (!light.isDirectionalLight() && t > distance)
-                        { // check if object is on other side of point light
+
+                        if (t > distance) {
                             shadowFlag = 1.0f;
                         } else {
                             shadowFlag = 0.0f;
@@ -306,7 +378,20 @@ float Scene::traceShadow(const Ray& ray, const Sphere& originSphere, const Light
     return shadowFlag;
 }
 
-std::ostream &operator<<(std::ostream& out, const Scene& scene) {
+Vector3 Scene::jitterLocation(const Vector3& location, float jitterAmount) const {
+    std::random_device rand;
+    std::mt19937 gen(rand());
+    std::uniform_real_distribution<> dis(-jitterAmount, jitterAmount);
+
+    float xJitter = location.getX() + dis(gen);
+    float yJitter = location.getY() + dis(gen);
+    float zJitter = location.getZ() + dis(gen);
+
+    return Vector3(xJitter, yJitter, zJitter);
+}
+
+    std::ostream &operator<<(std::ostream &out, const Scene &scene)
+{
     out << "scene: " << std::endl
         << "eye: " << scene.eye << std::endl
         << "viewdir: " << scene.viewdir << std::endl
@@ -323,12 +408,14 @@ std::ostream &operator<<(std::ostream& out, const Scene& scene) {
         << "ul: " << scene.ul << std::endl
         << "ur: " << scene.ur << std::endl
         << "ll: " << scene.ll << std::endl
-        << "lr: " << scene.lr << std::endl;
+        << "lr: " << scene.lr << std::endl
+        << "depthcueingflag: " << scene.depthCueingFlag << " " << scene.depthCue << std::endl;
     for (Sphere* sphere : scene.objects) {
         out << *sphere << std::endl;
     }
     for (Light* light : scene.lights) {
-        out << *light << std::endl;
+        // out << *light << std::endl;
+        light->printInfo();
     }
     return out;
 }

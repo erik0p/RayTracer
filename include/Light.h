@@ -3,19 +3,17 @@
 #include <ostream>
 
 class Light {
-    private:
-        Vector3 dir;
-        int type;
-        float intensity;
 
     public:
+        Vector3 dir;
+        float intensity;
         Light();
-        ~Light();
-        Light(const Vector3& dir_, int type_, float intensity_);
+        virtual ~Light();
+        Light(const Vector3& dir_, float intensity_);
         const Vector3& getDir() const { return dir; }
-        const int getType() const { return type; }
         const float getIntensity() const { return intensity; }
-        bool isDirectionalLight() const;
+        virtual Vector3 getDirToSource(const Vector3& point) const = 0;
+        virtual void printInfo() const = 0;
 
         friend std::ostream& operator<<(std::ostream& out, const Light& light);
 };

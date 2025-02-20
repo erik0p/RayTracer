@@ -293,11 +293,11 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
         // std::cout << "shadowflag: " << shadowFlag << std::endl;
         // light->printInfo();
 
-        if (PointLight* ptLight = dynamic_cast<PointLight*>(light)) {
+        if (!dynamic_cast<DirectionalLight*>(light)) { // Check if point light
             // std::cout << " L " << L << std::endl;
             for (int i = 0; i < numberOfJitteredRays; i++) {
-                Vector3 jitteredLocation = jitterLocation(ptLight->getDir(), jitterAmount);
-                PointLight jitteredLight = PointLight(jitteredLocation, ptLight->getIntensity());
+                Vector3 jitteredLocation = jitterLocation(light->getDir(), jitterAmount);
+                PointLight jitteredLight = PointLight(jitteredLocation, light->getIntensity());
                 Vector3 dirToLight = jitteredLight.getDir() - intersectionPoint;
                 dirToLight.normalize();
 

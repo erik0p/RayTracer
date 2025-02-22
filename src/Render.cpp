@@ -40,10 +40,8 @@ int main(int argc, char *argv[]) {
             for (int col = 0; col < scene.getImgWidth(); col++) {
                 
                 Vector3 viewPoint = scene.imageToView(row, col);
-                // std::cout << viewPoint << " ";
                 Vector3 dir = viewPoint - scene.getEye();
                 dir.normalize();
-                // std::cout << dir << " ";
 
                 Vector3 origin = scene.getEye();
                 Ray ray(origin, dir);
@@ -51,7 +49,6 @@ int main(int argc, char *argv[]) {
                 Color pxColor = scene.traceRay(ray);
                 outputFile << pxColor << std::endl;
             }
-            // std::cout << std::endl;
         }
         outputFile.close();
     }

@@ -63,7 +63,7 @@ class Scene {
         const float& getViewHeight() const { return viewHeight; }
         const float& getViewWidth() const { return viewWidth; }
 
-        /*
+        /**
          * reads in a file and intializes the fields using data from the file
          *
          * @param fileName name of the file to read
@@ -72,7 +72,7 @@ class Scene {
          */
         int initializeScene(std::string fileName);
 
-        /*
+        /**
          * traces a ray from its origin to a point in the view window and determines the color of the pixel hit by the ray
          *
          * @param ray the ray to trace
@@ -81,7 +81,7 @@ class Scene {
          */
         Color traceRay(const Ray& ray) const;
 
-        /*
+        /**
          * converts a row and col in an image to a 3d location in the view space
          *
          * @param row the row of the image
@@ -91,15 +91,44 @@ class Scene {
          */
         Vector3 imageToView(int row, int col) const;
 
-        /*
+        /**
+         * shades a ray using the Blinn-Phong model
+         *
+         * @param ray the ray to shade
+         * @param material the material of the object intersected with the ray
+         * @param intersectionPoint the point where the ray intersects the object
+         * @param intersectedSphere the sphere intersected by the ray
+         * 
+         * @return the illuminated at the interesected point
+         */
+        Color shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Sphere& intersectedSphere) const;
+
+        /**
+         * traces a shadow to test if it interesects an object
+         *
+         * @param ray the ray to trace
+         * @param originSphere the sphere where the ray originates from
+         * @param light the light source to trace towards
+         * 
+         * @return a shadow flag where 0.0f is an intersection and 1.0f is no intersection
+         */
+        float traceShadow(const Ray& ray, const Sphere& originSphere, Light& light) const;
+
+        /**
+         * jitters a location by a specified amount
+         *
+         * @param location the location to jitter
+         * @param jitterAmount the amount to jitter the location by
+         * 
+         * @return a location that has been randomly jittered
+         */
+        Vector3 jitterLocation(const Vector3& location, float jitterAmount) const;
+
+        /**
          * Overload the out stream operator to print a scene
          *
          * @param out the outstream
          * @param scene the scene whose fields are printed
          */
-
-        Color shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Sphere& intersectedSphere) const;
-        float traceShadow(const Ray& ray, const Sphere& originSphere, Light& light) const;
-        Vector3 jitterLocation(const Vector3& location, float jitterAmount) const;
         friend std::ostream& operator<<(std::ostream& out, const Scene& scene);
 };

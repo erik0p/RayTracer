@@ -12,7 +12,7 @@ class Color {
 
         Color();
 
-        /*
+        /**
          * Constructor for color.
          *
          * @param r_ the red value 0-1
@@ -25,7 +25,7 @@ class Color {
         float getG() const { return g; }
         float getB() const { return b; }
 
-        /*
+        /**
          * Linearly interpolates between two colors, c1 and c2, by the amount t.
          *
          * @param c1 first color to interpolate between
@@ -36,7 +36,7 @@ class Color {
          */
         static Color lerp(const Color& c1, const Color& c2, float t);
 
-        /*
+        /**
          * overload the addition operator for color addition
          *
          * @param c a color
@@ -45,7 +45,7 @@ class Color {
          */
         Color operator+(const Color& c) const;
 
-        /*
+        /**
          * overload the multiplication operator for color scalar multiplication where the scalar comes first
          *
          * @param scalar the scalar value
@@ -55,7 +55,7 @@ class Color {
          */
         friend Color operator*(const float &scalar, const Color &rhs);
 
-        /*
+        /**
          * overload the multiplication operator for color scalar multiplication
          *
          * @param scalar the scalar value
@@ -64,9 +64,12 @@ class Color {
          */
         Color operator*(const float &scalar);
 
+        /**
+         * clamps the color's rgb values between 0.0f and 1.0f
+         */
         void clamp();
 
-        /*
+        /**
          * Overload the out stream operator to print the RGB values in a format usable by .ppm files
          *
          * @param out the outstream

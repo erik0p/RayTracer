@@ -8,7 +8,7 @@ class Ray {
     public:
         Ray();
 
-        /*
+        /**
          * Constructor for a ray
          *
          * @param origin_ the origin point of the ray
@@ -19,7 +19,7 @@ class Ray {
         const Vector3& getOrigin() const { return origin; }
         const Vector3& getDir() const { return dir; }
 
-        /*
+        /**
          * Overload the out stream operator to print a ray
          *
          * @param out the outstream

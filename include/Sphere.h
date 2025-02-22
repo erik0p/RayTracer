@@ -10,7 +10,7 @@ class Sphere {
         Material material;
     public:
 
-        /*
+        /**
          * Constructor for a sphere
          *
          * @param center_ the center point of the sphere
@@ -22,10 +22,9 @@ class Sphere {
 
         const Vector3& getCenter() const { return center; }
         float getRadius() const { return radius; }
-        // const Color& getColor() const { return color; } 
         const Material& getMaterial() const { return material; }
 
-        /*
+        /**
          * Tests if a ray interesects a sphere and stores the minimum distance the intersection occured at.
          *
          * @param ray the ray to test for intersection
@@ -35,9 +34,16 @@ class Sphere {
          */
         bool rayIntersects(const Ray& ray, float& minT) const;
 
+        /**
+         * Tests if a sphere object is equivalent to another. Equivalent spheres have the same radius and center
+         * 
+         * @param s the sphere to test equality against
+         * 
+         * @return true if s equals the sphere that calls this function, false otherwise
+         */
         bool equals(const Sphere& s) const;
 
-        /*
+        /**
          * Appends to the outstream
          *
          * @param out the outstream
@@ -45,7 +51,7 @@ class Sphere {
         void print(std::ostream& out) const;
 
 
-        /*
+        /**
          * Overload the out stream operator to print a sphere
          *
          * @param out the outstream

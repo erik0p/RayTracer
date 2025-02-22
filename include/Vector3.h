@@ -12,7 +12,7 @@ public:
   const static Vector3 ZERO;
   Vector3();
 
-  /*
+  /**
    * constructor for vector3
    *
    * @param x_ the x component
@@ -26,7 +26,7 @@ public:
   float getY() const { return y; }
   float getZ() const { return z; }
 
-  /*
+  /**
    * overload the addition operator for vector addition
    *
    * @param v a vector3
@@ -35,7 +35,7 @@ public:
    */
   Vector3 operator+(const Vector3& v) const;
 
-  /*
+  /**
    * overload the subtraction operator for vector subtraction
    *
    * @param v a vector3
@@ -44,7 +44,7 @@ public:
    */
   Vector3 operator-(const Vector3& v) const;
 
-  /*
+  /**
    * overload the multiplication operator for vector scalar multiplication where the scalar comes first
    *
    * @param scalar the scalar value
@@ -54,7 +54,7 @@ public:
    */
   friend Vector3 operator*(const float& scalar, const Vector3& rhs);
 
-  /*
+  /**
    * overload the multiplication operator for vector scalar multiplication
    *
    * @param scalar the scalar value 
@@ -63,7 +63,7 @@ public:
    */
   Vector3 operator*(const float& scalar);
 
-  /*
+  /**
    * overload the division operator for vector scalar division
    *
    * @param scalar the scalar value
@@ -72,20 +72,20 @@ public:
    */
   Vector3 operator/(const float& scalar);
 
-  /*
+  /**
    * calculates the magnitude of the vector3
    *
    * @return the magnitude of the vector3
    */
   float length() const;
 
-  /*
+  /**
    * normalizes the vector3
    *
    */
   void normalize();
 
-  /*
+  /**
    * calculates a vector3 that is normalized
    *
    * 
@@ -93,7 +93,7 @@ public:
    */
   Vector3 normalized() const;
 
-  /*
+  /**
    * calculates the dot product with another vector3
    *
    * @param v the vector3 to dot with
@@ -102,7 +102,7 @@ public:
    */
   float dot(const Vector3& v) const;
 
-  /*
+  /**
    * determines if the x, y, z components of two vector3s are equal
    *
    * @param v1 a vector3
@@ -112,7 +112,7 @@ public:
    */
   bool equals(const Vector3& v) const;
 
-  /*
+  /**
    * calculates the euclidean distance between two vectors
    *
    * @param v1 the lhs vector3
@@ -122,7 +122,7 @@ public:
    */
   static float distanceBetween(const Vector3& v1, const Vector3& v2);
 
-  /*
+  /**
    * performs addition between two vector3s
    *
    * @param v1 the lhs vector3
@@ -132,7 +132,7 @@ public:
    */
   static Vector3 add(const Vector3& v1, const Vector3& v2);
 
-  /*
+  /**
    * performs subtraction between two vector3s
    *
    * @param v1 the lhs vector3
@@ -142,7 +142,7 @@ public:
    */
   static Vector3 subtract(const Vector3& v1, const Vector3& v2);
 
-  /*
+  /**
    * performs scalar multiplication on a vector3
    *
    * @param scalar the scalar value
@@ -152,7 +152,7 @@ public:
    */
   static Vector3 multiply(float scalar, const Vector3& v);
 
-  /*
+  /**
    * performs the cross product of two vector3s
    *
    * @param v1 the lhs vector3
@@ -162,7 +162,7 @@ public:
    */
   static Vector3 cross(const Vector3& v1, const Vector3& v2);
 
-  /*
+  /**
    * Overload the out stream operator to print a vector3
    *
    * @param out the outstream

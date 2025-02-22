@@ -10,7 +10,7 @@ AttenuationLight::AttenuationLight(const Vector3& dir_, float intensity_, float 
 }
 
 Vector3 AttenuationLight::getDirToSource(const Vector3& point) const {
-    return this->getDirOrCenter() - point;
+    return this->getDirOrPoint() - point;
 }
 
 float AttenuationLight::attenuation(float distance) const {
@@ -18,6 +18,6 @@ float AttenuationLight::attenuation(float distance) const {
 }
 
 void AttenuationLight::printInfo() const {
-    std::cout << "light: " << " dir: " << this->getDirOrCenter() << " intensity: " << this->getIntensity()
+    std::cout << "light: " << " dir: " << this->getDirOrPoint() << " intensity: " << this->getIntensity()
     << " c1: " << c1 << " c2: " << c2 << " c3: " << c3 << std::endl;; 
 }

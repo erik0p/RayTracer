@@ -182,8 +182,8 @@ int Scene::initializeScene(std::string fileName) {
                 ss >> c1;
                 ss >> c2;
                 ss >> c3;
-                if (ss.fail()) {
-                    std::cout << "Invalid input for attlight parameter. Must provide 8 floats 'attlight x y z w i c1 c2 c3'" << std::endl;
+                if (ss.fail() || (c1 == 0 && c2 == 0 && c3 == 0)) {
+                    std::cout << "Invalid input for attlight parameter. Must provide 8 floats 'attlight x y z w i c1 c2 c3'. Ensure c1 c2 c3 sum is > 0" << std::endl;
                     return -1;
                 }
                 Light* light = new AttenuationLight(Vector3(x, y, z), i, c1, c2 ,c3);
@@ -277,40 +277,38 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
     int numberOfJitteredRays = 50;
     float jitterAmount = 0.01f;
 
+    // Calculate the local illumination for each light
     for (Light *light : lights)
     {
 
         Vector3 L; // vector pointing towards light source
         Vector3 N; // surface normal
         Vector3 H; // direction halfway between light and direction towards the viewer
-        Vector3 V;
-        float shadowFlag = 1.0f;
+        Vector3 V; // direction from intersection point to light
+        float shadowFlag = 0.0f;
 
         L = light->getDirToSource(intersectionPoint);
         L.normalize();
 
-
-        // std::cout << "shadowflag: " << shadowFlag << std::endl;
-        // light->printInfo();
-
-        if (!dynamic_cast<DirectionalLight*>(light)) { // Check if point light
-            // std::cout << " L " << L << std::endl;
+        // Check if point light (regular point light or attenuated). Do soft shadows in that case
+        if (!dynamic_cast<DirectionalLight*>(light)) {
             for (int i = 0; i < numberOfJitteredRays; i++) {
-                Vector3 jitteredLocation = jitterLocation(light->getDirOrCenter(), jitterAmount);
-                PointLight jitteredLight = PointLight(jitteredLocation, light->getIntensity());
-                Vector3 dirToLight = jitteredLight.getDirOrCenter() - intersectionPoint;
-                dirToLight.normalize();
 
-                // std::cout << "Jitter L " << dirToLight << std::endl;
-                // std::cout << " jitter light ";
-                // jitteredLight.printInfo();
+                // Get a new jittered location from the original point light location
+                Vector3 jitteredLocation = jitterLocation(light->getDirOrPoint(), jitterAmount);
+
+                // Create a new light from the jittered position
+                PointLight jitteredLight = PointLight(jitteredLocation, light->getIntensity());
+
+                Vector3 dirToLight = jitteredLight.getDirOrPoint() - intersectionPoint;
+                dirToLight.normalize();
 
                 Ray shadowRay(intersectionPoint, dirToLight);
                 shadowFlag += traceShadow(shadowRay, intersectedSphere, jitteredLight);
             }
+            // average the shadows
             shadowFlag = shadowFlag / numberOfJitteredRays;
-            // std::cout << "shadowflag: " << shadowFlag << std::endl;
-        } else {
+        } else { // hard shadows for directional lights
             Ray shadowRay(intersectionPoint, L);
             shadowFlag = traceShadow(shadowRay, intersectedSphere, *light);
         }
@@ -326,21 +324,24 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
 
         localIllumination = localIllumination + (shadowFlag * (kd * diffuseColor * std::max(0.0f, (N.dot(L))) + ks * specularColor * pow(std::max(0.0f, (N.dot(H))), n)));
 
+
         if (AttenuationLight* attLight = dynamic_cast<AttenuationLight*>(light)) {
-            float distance = Vector3::distanceBetween(intersectionPoint, light->getDirOrCenter());
+            float distance = Vector3::distanceBetween(intersectionPoint, light->getDirOrPoint());
             float att = attLight->attenuation(distance);
-            // std::cout << "att : " << att << std::endl;
-            // std::cout << "distance : " << distance << std::endl;
             localIllumination = localIllumination * att;
         }
     }
+
+    // add in the ambient component
     colorResult = ka * diffuseColor + localIllumination;
 
+    // Apply depthcueing to the illumination 
     if (depthCueingFlag) {
         float distance = Vector3::distanceBetween(eye, intersectionPoint);
         colorResult = depthCue.applyDepthCueing(colorResult, distance);
     }
 
+    // clamp color between 0.0f and 1.0f
     colorResult.clamp();
 
     return colorResult;
@@ -354,17 +355,16 @@ float Scene::traceShadow(const Ray& ray, const Sphere& originSphere, Light& ligh
         float t = FLT_MAX;
 
         if (!sphere->equals(originSphere)) { // don't check the sphere where the shadow ray originates
-            // std::cout << "t before: " << t << std::endl;
-            if (sphere->rayIntersects(ray, t)) {
-            // std::cout << "t after: " << t << std::endl;
 
-                if (t > 0.0f) {
+            if (sphere->rayIntersects(ray, t)) {
+                
+                if (t > 0.0f) { // ray intersects sphere
                     if (dynamic_cast<DirectionalLight*>(&light)) {
                         shadowFlag = 0.0f;
                     } else {
-                        float distance = Vector3::distanceBetween(ray.getOrigin(), light.getDirOrCenter());
+                        float distance = Vector3::distanceBetween(ray.getOrigin(), light.getDirOrPoint());
 
-                        if (t > distance) {
+                        if (t > distance) { // object is behind point light
                             shadowFlag = 1.0f;
                         } else {
                             shadowFlag = 0.0f;

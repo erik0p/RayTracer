@@ -1,9 +1,12 @@
 #include "Scene.h"
+#include "Object.h"
 #include "PointLight.h"
 #include "DirectionalLight.h"
 #include "AttenuationLight.h"
 #include "Ray.h"
 #include "Sphere.h"
+#include "Triangle.h"
+#include "SmoothShadedTriangle.h"
 #include "Vector3.h"
 #include "Utils.h"
 #include "Light.h"
@@ -16,17 +19,19 @@
 #include <vector>
 #include <algorithm>
 #include <random>
+#include <regex>
 
 Scene::Scene() {}
 Scene::~Scene() {
-    for (Sphere* sphere : objects) {
-        delete sphere;
+    for (Object* object : objects) {
+        delete object;
     }
     objects.clear();
     for (Light* light : lights) {
         delete light;
     }
     lights.clear();
+
 }
 
 int Scene::initializeScene(std::string fileName) {
@@ -135,7 +140,7 @@ int Scene::initializeScene(std::string fileName) {
                 }
                 Vector3 center(x, y, z);
                 Material material = mtlcolor;
-                Sphere* sphere = new Sphere(center, r, material);
+                Object* sphere = new Sphere(center, r, material);
                 objects.push_back(sphere);
             } else if (keyword.compare("light") == 0) {
                 float x, y, z, i;
@@ -188,6 +193,68 @@ int Scene::initializeScene(std::string fileName) {
                 }
                 Light* light = new AttenuationLight(Vector3(x, y, z), i, c1, c2 ,c3);
                 lights.push_back(light);
+            } else if (keyword.compare("v") == 0) {
+                float x, y, z;
+                ss >> x;
+                ss >> y;
+                ss >> z;
+                if (ss.fail()) {
+                    std::cout << "Invalid input for v parameter. Must provide 3 floats x y z" << std::endl;
+                    return -1;
+                }
+                vertices.push_back(Vector3(x, y, z));
+            } else if (keyword.compare("f") == 0) {
+                std::string remainingData;
+                remainingData = ss.str().substr(ss.tellg());
+                
+                std::smatch match;
+                std::regex verticePoints("([1-9]+) ([1-9]+) ([1-9]+)");
+                std::regex verticesAndNormals("([1-9]+)//([1-9]+) ([1-9]+)//([1-9]+) ([1-9]+)//([1-9]+)");
+                std::regex verticesAndTexture("([1-9]+)/([1-9]+) ([1-9]+)/([1-9]+) ([1-9]+)/([1-9]+)");
+
+                if (std::regex_search(remainingData, match, verticePoints)) {
+                    int v1, v2, v3;
+                    v1 = stoi(match[1]);
+                    v2 = stoi(match[2]);
+                    v3 = stoi(match[3]);
+                    Material material = mtlcolor;
+                    Object *triangle = new Triangle(vertices[v1 - 1], vertices[v2 - 1], vertices[v3 - 1], material);
+                    objects.push_back(triangle);
+                } else if (std::regex_search(remainingData, match, verticesAndNormals)) {
+                    int v1, v2, v3, vn1, vn2, vn3;
+                    v1 = stoi(match[1]);
+                    vn1 = stoi(match[2]);
+                    v2 = stoi(match[3]);
+                    vn2 = stoi(match[4]);
+                    v3 = stoi(match[5]);
+                    vn3 = stoi(match[6]);
+                    Material material = mtlcolor;
+                    Object *triangle = new SmoothShadedTriangle(vertices[v1 - 1], vertices[v2 - 1], vertices[v3 - 1], material,
+                                                                normals[vn1 - 1], normals[vn2 - 1], normals[vn3 - 1]);
+                    objects.push_back(triangle);
+                    std::cout << "WITH NORMS";
+                } else if (std::regex_search(remainingData, match, verticesAndTexture)) {
+                    int v1, v2, v3, vt1, vt2, vt3;
+                    v1 = stoi(match[1]);
+                    vt1 = stoi(match[2]);
+                    v2 = stoi(match[3]);
+                    vt2 = stoi(match[4]);
+                    v3 = stoi(match[5]);
+                    vt3 = stoi(match[6]);
+                }
+
+
+
+            } else if (keyword.compare("vn") == 0) {
+                float nx, ny, nz;
+                ss >> nx;
+                ss >> ny;
+                ss >> nz;
+                if (ss.fail()) {
+                    std::cout << "Invalid input for vn parameter. Must provide 3 floats x y z" << std::endl;
+                    return -1;
+                }
+                normals.push_back(Vector3(nx, ny, nz));
             } else if (!utils::containsWhiteSpaceOrEmpty(keyword)) {
                 std::cout << keyword << " is not a valid keyword" << std::endl;
                 return -1;
@@ -240,16 +307,16 @@ Vector3 Scene::imageToView(int row, int col) const {
 
 Color Scene::traceRay(const Ray& ray) const {
     Color color = bkgcolor;
-    Sphere *closestObject = NULL;
+    Object *closestObject = NULL;
     float minT = FLT_MAX;
     
     // iterate through objects in the scene and find the object whose interesection is closest, if any
-    for (Sphere* sphere : objects) {
+    for (Object* object : objects) {
         float t = FLT_MAX;
-        if (sphere->rayIntersects(ray, t)) {
+        if (object->rayIntersects(ray, t)) {
             if (t < minT && t > 0.0f) {
                 minT = t;
-                closestObject = sphere;
+                closestObject = object;
             }
         }
     }
@@ -265,7 +332,7 @@ Color Scene::traceRay(const Ray& ray) const {
     return color;
 }
 
-Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Sphere& intersectedSphere) const {
+Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Object& intersectedObject) const {
     Color colorResult;
     float ka = material.getKa();
     float kd = material.getKd();
@@ -304,17 +371,18 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
                 dirToLight.normalize();
 
                 Ray shadowRay(intersectionPoint, dirToLight);
-                shadowFlag += traceShadow(shadowRay, intersectedSphere, jitteredLight);
+                shadowFlag += traceShadow(shadowRay, intersectedObject, jitteredLight);
             }
             // average the shadows
             shadowFlag = shadowFlag / numberOfJitteredRays;
         } else { // hard shadows for directional lights
             Ray shadowRay(intersectionPoint, L);
-            shadowFlag = traceShadow(shadowRay, intersectedSphere, *light);
+            shadowFlag = traceShadow(shadowRay, intersectedObject, *light);
         }
 
-        N = (intersectionPoint - intersectedSphere.getCenter()) / intersectedSphere.getRadius();
-        N.normalize();
+        // N = (intersectionPoint - intersectedObject.getCenter()) / intersectedObject.getRadius();
+        // N.normalize();
+        N = intersectedObject.calculateNormal(intersectionPoint);
 
         V = ray.getOrigin() - intersectionPoint;
         V.normalize();
@@ -347,16 +415,16 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
     return colorResult;
 }
 
-float Scene::traceShadow(const Ray& ray, const Sphere& originSphere, Light& light) const {
+float Scene::traceShadow(const Ray& ray, const Object& originObject, Light& light) const {
     float shadowFlag = 1.0f;
     
     // iterate through objects in the scene and find the object whose interesection is closest, if any
-    for (Sphere* sphere : objects) {
+    for (Object* object : objects) {
         float t = FLT_MAX;
 
-        if (!sphere->equals(originSphere)) { // don't check the sphere where the shadow ray originates
+        if (!object->equals(originObject)) { // don't check the object where the shadow ray originates
 
-            if (sphere->rayIntersects(ray, t)) {
+            if (object->rayIntersects(ray, t)) {
                 
                 if (t > 0.0f) { // ray intersects sphere
                     if (dynamic_cast<DirectionalLight*>(&light)) {
@@ -410,8 +478,8 @@ Vector3 Scene::jitterLocation(const Vector3& location, float jitterAmount) const
         << "ll: " << scene.ll << std::endl
         << "lr: " << scene.lr << std::endl
         << "depthcueingflag: " << scene.depthCueingFlag << " " << scene.depthCue << std::endl;
-    for (Sphere* sphere : scene.objects) {
-        out << *sphere << std::endl;
+    for (Object* object : scene.objects) {
+        object->printInfo();
     }
     for (Light* light : scene.lights) {
         // out << *light << std::endl;

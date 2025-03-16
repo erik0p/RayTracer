@@ -1,9 +1,10 @@
 #pragma once
 #include "Vector3.h"
 #include "Material.h"
+#include "Object.h"
 #include "Ray.h"
 
-class Sphere {
+class Sphere : public Object {
     private:
         Vector3 center;
         float radius;
@@ -22,7 +23,7 @@ class Sphere {
 
         const Vector3& getCenter() const { return center; }
         float getRadius() const { return radius; }
-        const Material& getMaterial() const { return material; }
+        const Material& getMaterial() const override { return material; }
 
         /**
          * Tests if a ray interesects a sphere and stores the minimum distance the intersection occured at.
@@ -32,7 +33,9 @@ class Sphere {
          * 
          * @return true if the ray interects the sphere
          */
-        bool rayIntersects(const Ray& ray, float& minT) const;
+        bool rayIntersects(const Ray& ray, float& minT) const override;
+
+        const Vector3 calculateNormal(const Vector3& intersectionPoint) const override;
 
         /**
          * Tests if a sphere object is equivalent to another. Equivalent spheres have the same radius and center
@@ -41,14 +44,13 @@ class Sphere {
          * 
          * @return true if s equals the sphere that calls this function, false otherwise
          */
-        bool equals(const Sphere& s) const;
+        bool equals(const Object& o) const override;
 
         /**
-         * Appends to the outstream
          *
-         * @param out the outstream
+         *
          */
-        void print(std::ostream& out) const;
+        void printInfo() const override;
 
 
         /**

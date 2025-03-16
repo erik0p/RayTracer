@@ -11,7 +11,7 @@ endif
 SRCS = $(wildcard src/*.cpp)
 OBJS = $(SRCS:src/%.cpp=%.o)
 
-TARGET = raytracer1b
+TARGET = raytracer1c
 
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $(TARGET)

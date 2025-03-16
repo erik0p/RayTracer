@@ -63,15 +63,26 @@ bool Sphere::rayIntersects(const Ray& ray, float& minT) const {
     return true;
 }
 
-bool Sphere::equals(const Sphere& s) const {
-    return center.equals(s.center) && radius == s.radius;
+bool Sphere::equals(const Object& o) const {
+    const Sphere* s = dynamic_cast<const Sphere*>(&o);
+    if (s) {
+        return center.equals(s->center) && radius == s->radius;
+    }
+    return false;
 }
 
-void Sphere::print(std::ostream& out) const {
-    out <<"sphere: "
+const Vector3 Sphere::calculateNormal(const Vector3& intersectionPoint) const {
+    Vector3 N = (intersectionPoint - center) / radius;
+    N.normalize();
+    return N;
+}
+
+
+void Sphere::printInfo() const {
+    std::cout <<"sphere: "
         << "center: " << center
         << " radius: " << radius << std::endl
-        << "material: " << material;
+        << "material: " << material << std::endl;
 }
 
 std::ostream& operator<<(std::ostream& out, const Sphere& sphere) {

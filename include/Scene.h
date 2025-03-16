@@ -3,6 +3,7 @@
 #include <ostream>
 #include "Vector3.h"
 #include "Material.h"
+#include "Object.h"
 #include "Sphere.h"
 #include "Ray.h"
 #include "Light.h"
@@ -21,7 +22,7 @@ class Scene {
         Color bkgcolor;
         // Color mtlcolor;
         Material mtlcolor;
-        std::vector<Sphere*> objects;
+        std::vector<Object*> objects;
         std::vector<Light*> lights;
 
         DepthCueing depthCue;
@@ -39,6 +40,9 @@ class Scene {
 
         float viewHeight;
         float viewWidth;
+
+        std::vector<Vector3> vertices;
+        std::vector<Vector3> normals;
        
     public:
         Scene();
@@ -52,7 +56,7 @@ class Scene {
         const float& getImgHeight() const { return imgHeight; }
         const Color& getBkgcolor() const { return bkgcolor; }
         const Material& getMtlcolor() const { return mtlcolor; }
-        const std::vector<Sphere*> getSpheres() const { return objects; }
+        const std::vector<Object*> getObjects() const { return objects; }
         const Vector3& getUl() const { return ul; }
         const Vector3& getUr() const { return ur; }
         const Vector3& getLl() const { return ll; }
@@ -62,6 +66,9 @@ class Scene {
         const std::vector<Light*> getLights() const { return lights; }
         const float& getViewHeight() const { return viewHeight; }
         const float& getViewWidth() const { return viewWidth; }
+        const std::vector<Vector3> getVertices() const { return vertices; }
+        const std::vector<Vector3> getNormals() const { return normals; }
+
 
         /**
          * reads in a file and intializes the fields using data from the file
@@ -97,22 +104,22 @@ class Scene {
          * @param ray the ray to shade
          * @param material the material of the object intersected with the ray
          * @param intersectionPoint the point where the ray intersects the object
-         * @param intersectedSphere the sphere intersected by the ray
+         * @param intersectedObject the object intersected by the ray
          * 
          * @return the illuminated at the interesected point
          */
-        Color shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Sphere& intersectedSphere) const;
+        Color shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Object& intersectedObject) const;
 
         /**
          * traces a shadow to test if it interesects an object
          *
          * @param ray the ray to trace
-         * @param originSphere the sphere where the ray originates from
+         * @param originObject the object where the ray originates from
          * @param light the light source to trace towards
          * 
          * @return a shadow flag where 0.0f is an intersection and 1.0f is no intersection
          */
-        float traceShadow(const Ray& ray, const Sphere& originSphere, Light& light) const;
+        float traceShadow(const Ray& ray, const Object& originObject, Light& light) const;
 
         /**
          * jitters a location by a specified amount

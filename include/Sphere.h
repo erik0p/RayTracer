@@ -35,8 +35,22 @@ class Sphere : public Object {
          */
         bool rayIntersects(const Ray& ray, float& minT) const override;
 
+        /**
+         * Calculates the normal at a given point
+         * 
+         * @param intersectionPoint the point to calculate the normal at
+         * 
+         * @return the normal at the intersected point
+         */
         Vector3 calculateNormal(const Vector3& intersectionPoint) const override;
 
+        /**
+         * Calculates the color at a given point
+         * 
+         * @param intersectionPoint the point to calculate the color at
+         * 
+         * @return the color at the intersected point
+         */
         Color calculateColor(const Vector3& intersectionPoint) const override;
 
         /**
@@ -49,7 +63,7 @@ class Sphere : public Object {
         bool equals(const Object& o) const override;
 
         /**
-         *
+         * print information about the sphere
          *
          */
         void printInfo() const override;

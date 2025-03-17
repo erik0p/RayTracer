@@ -212,7 +212,7 @@ int Scene::initializeScene(std::string fileName) {
                 std::regex verticePoints("([0-9]+) ([0-9]+) ([0-9]+)"); // match flat-shaded triangle
                 std::regex verticesAndNormals("([0-9]+)//([0-9]+) ([0-9]+)//([0-9]+) ([0-9]+)//([0-9]+)"); // match smooth-shaded triangle
                 std::regex verticesAndTexture("([0-9]+)/([0-9]+) ([0-9]+)/([0-9]+) ([0-9]+)/([0-9]+)"); // match flat-shaded triangle with texture
-                std::regex verticesAndTextureWithNormals("([0-9]+)/([0-9]+)/([0-9]+) ([0-9]+)/([0-9]+)/([0-9]+) ([1-9]+)/([1-9]+)/([1-9]+)"); // match smooth-shaded triangle with texture
+                std::regex verticesAndTextureWithNormals("([0-9]+)/([0-9]+)/([0-9]+) ([0-9]+)/([0-9]+)/([0-9]+) ([0-9]+)/([0-9]+)/([0-9]+)"); // match smooth-shaded triangle with texture
 
                 if (std::regex_search(remainingData, match, verticePoints)) {
                     int v1, v2, v3;
@@ -436,8 +436,9 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
         H = (L + V) / 2.0f;
         H.normalize();
 
+        // calculate diffuse color for the object
         diffuseColor = intersectedObject.calculateColor(intersectionPoint);
-        // std::cout << diffuseColor << std::endl;
+
         localIllumination = localIllumination + (shadowFlag * (kd * diffuseColor * std::max(0.0f, (N.dot(L))) + ks * specularColor * pow(std::max(0.0f, (N.dot(H))), n)));
 
 

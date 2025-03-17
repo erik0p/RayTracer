@@ -1,6 +1,7 @@
 #include <ostream>
 #include <cmath>
 #include "Sphere.h"
+#include "Utils.h"
 #include "Vector3.h"
 #include "Material.h"
 #include "Object.h"
@@ -71,10 +72,38 @@ bool Sphere::equals(const Object& o) const {
     return false;
 }
 
-const Vector3 Sphere::calculateNormal(const Vector3& intersectionPoint) const {
+Vector3 Sphere::calculateNormal(const Vector3& intersectionPoint) const {
     Vector3 N = (intersectionPoint - center) / radius;
     N.normalize();
     return N;
+}
+
+Color Sphere::calculateColor(const Vector3& intersectionPoint) const {
+    if (!material.getTextureFlag()) {
+        return material.getDiffuseColor();
+    } else {
+        Vector3 normal = calculateNormal(intersectionPoint);
+        float phi = acos(normal.getZ());
+        float theta = atan2(normal.getY(), normal.getX());
+        if (theta < 0.0f) {
+            theta += 2.0f * utils::PI;
+        }
+        double v = phi / utils::PI;
+        double u = theta / (2.0f * utils::PI);
+        double x;
+
+        if (u > 1.0f) {
+            u = modf(u, &x);
+        }
+        if (v > 1.0f) {
+            v = modf(v, &x);
+        }
+
+        int j = round(u * (material.getTextureWidth() - 1));
+        int i = round(v * (material.getTextureHeight() - 1));
+        Color color = material.lookupColor(i, j);
+        return color;
+    }
 }
 
 

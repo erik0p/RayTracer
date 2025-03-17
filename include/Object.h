@@ -21,7 +21,8 @@ class Object {
         virtual bool rayIntersects(const Ray& ray, float& minT) const = 0;
         virtual bool equals(const Object& o) const = 0;
         virtual const Material& getMaterial() const = 0;
-        virtual const Vector3 calculateNormal(const Vector3& intersectionPoint) const = 0;
+        virtual Vector3 calculateNormal(const Vector3& intersectionPoint) const = 0;
+        virtual Color calculateColor(const Vector3& intersectionPoint) const = 0;
 
         /**
          * prints information about the object

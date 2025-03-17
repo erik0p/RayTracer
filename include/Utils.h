@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "Material.h"
 
 namespace utils {
     const double PI = 3.14159265358979323846;
@@ -30,4 +31,6 @@ namespace utils {
      * @return true if str contains whitespace or is empty, false otherwise
      */
     bool containsWhiteSpaceOrEmpty(std::string str);
+
+    bool readTextureFile(std::string ppmfile, Material& material);
 }

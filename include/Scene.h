@@ -2,6 +2,7 @@
 #include <vector>
 #include <ostream>
 #include "Vector3.h"
+#include "Vector2.h"
 #include "Material.h"
 #include "Object.h"
 #include "Sphere.h"
@@ -43,6 +44,7 @@ class Scene {
 
         std::vector<Vector3> vertices;
         std::vector<Vector3> normals;
+        std::vector<Vector2> textureCoords;
        
     public:
         Scene();
@@ -68,6 +70,7 @@ class Scene {
         const float& getViewWidth() const { return viewWidth; }
         const std::vector<Vector3> getVertices() const { return vertices; }
         const std::vector<Vector3> getNormals() const { return normals; }
+        const std::vector<Vector2> getTextureCoords() const { return textureCoords; }
 
 
         /**

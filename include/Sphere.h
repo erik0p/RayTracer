@@ -35,7 +35,9 @@ class Sphere : public Object {
          */
         bool rayIntersects(const Ray& ray, float& minT) const override;
 
-        const Vector3 calculateNormal(const Vector3& intersectionPoint) const override;
+        Vector3 calculateNormal(const Vector3& intersectionPoint) const override;
+
+        Color calculateColor(const Vector3& intersectionPoint) const override;
 
         /**
          * Tests if a sphere object is equivalent to another. Equivalent spheres have the same radius and center

@@ -1,10 +1,23 @@
 #include "Triangle.h"
 #include "Vector3.h"
+#include <cmath>
+#include <algorithm>
 
 Triangle::Triangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material& material_) {
     v0 = v0_;
     v1 = v1_;
     v2 = v2_;
+    material = material_;
+}
+
+Triangle::Triangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material& material_, 
+    Vector2& vt0_, Vector2& vt1_, Vector2& vt2_) {
+    v0 = v0_;
+    v1 = v1_;
+    v2 = v2_;
+    vt0 = vt0_;
+    vt1 = vt1_;
+    vt2 = vt2_;
     material = material_;
 }
 
@@ -15,7 +28,12 @@ bool Triangle::rayIntersects(const Ray& ray, float& minT) const {
     float dx = ray.getDir().getX();
     float dy = ray.getDir().getY();
     float dz = ray.getDir().getZ();
-    Vector3 n = calculateNormal(Vector3()); 
+
+    Vector3 e1 = v1 - v0;
+    Vector3 e2 = v2 - v0;
+    Vector3 n = Vector3::cross(e1, e2);
+    n.normalize();
+
     float A = n.getX();
     float B = n.getY();
     float C = n.getZ();
@@ -33,20 +51,19 @@ bool Triangle::rayIntersects(const Ray& ray, float& minT) const {
 
     float numerator = -(A * x + B * y + C * z + D);
 
+    // distance where intersection occurs
     t = numerator / denominator;
 
-    if (t < 0) {
+    // intersection is behind ray origin
+    if (t < 0) { 
         return false;
     }
 
     minT = t;
 
-    Vector3 intersectionPoint = ray.getOrigin() + minT * ray.getDir();
+    Vector3 intersectionPoint = ray.getOrigin() + t * ray.getDir();
 
     // determine if inside triangle using barycentric coords
-
-    Vector3 e1 = v1 - v0;
-    Vector3 e2 = v2 - v0;
     Vector3 ep = intersectionPoint - v0;
     float d11 = e1.dot(e1);
     float d22 = e2.dot(e2);
@@ -69,10 +86,10 @@ bool Triangle::rayIntersects(const Ray& ray, float& minT) const {
         return false;
     }
 
-    if (alpha + beta + gamma > 1) {
+    // point is outside
+    if (alpha > 1 || beta > 1 || gamma > 1) {
         return false;
     }
-
 
     return true;
 }
@@ -85,7 +102,7 @@ bool Triangle::equals(const Object& o) const {
     return false;
 }
 
-const Vector3 Triangle::calculateNormal(const Vector3& intersectionPoint) const {
+Vector3 Triangle::calculateNormal(const Vector3& intersectionPoint) const {
     Vector3 e1 = v1 - v0;
     Vector3 e2 = v2 - v0;
     Vector3 N = Vector3::cross(e1, e2);
@@ -93,7 +110,35 @@ const Vector3 Triangle::calculateNormal(const Vector3& intersectionPoint) const 
     return N;
 }
 
-const Vector3 Triangle::calculateBarycentricCoords(const Vector3& intersectionPoint) const {
+Color Triangle::calculateColor(const Vector3& intersectionPoint) const {
+    if (!material.getTextureFlag()) {
+        return material.getDiffuseColor();
+    } else {
+        Vector3 barycentricCoords = calculateBarycentricCoords(intersectionPoint);
+        float alpha = barycentricCoords.getX();
+        float beta = barycentricCoords.getY();
+        float gamma = barycentricCoords.getZ();
+
+        double u = alpha * vt0.getX() + beta * vt1.getX() + gamma * vt2.getX();
+        double v = alpha * vt0.getY() + beta * vt1.getY() + gamma * vt2.getY();
+
+        double x;
+        if (u > 1.0) {
+            u = modf(u, &x);
+        }
+        if (v > 1.0) {
+            v = modf(v, &x);
+        }
+
+        int j = round(u * (material.getTextureWidth() - 1));
+        int i = round(v * (material.getTextureHeight() - 1));
+
+        Color color = material.lookupColor(i, j);
+        return color;
+    }
+}
+
+Vector3 Triangle::calculateBarycentricCoords(const Vector3& intersectionPoint) const {
     Vector3 e1 = v1 - v0;
     Vector3 e2 = v2 - v0;
     Vector3 ep = intersectionPoint - v0;
@@ -107,7 +152,7 @@ const Vector3 Triangle::calculateBarycentricCoords(const Vector3& intersectionPo
 
     float beta = (d22 * d1p - d12 * d2p) / determinant;
     float gamma = (d11 * d2p - d12 * d1p) / determinant;
-    float alpha = 1 - (beta + gamma);
+    float alpha = 1.0f - (beta + gamma);
 
     return Vector3(alpha, beta, gamma);
 }

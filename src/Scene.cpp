@@ -8,6 +8,7 @@
 #include "Triangle.h"
 #include "SmoothShadedTriangle.h"
 #include "Vector3.h"
+#include "Vector2.h"
 #include "Utils.h"
 #include "Light.h"
 #include "DepthCueing.h"
@@ -208,9 +209,10 @@ int Scene::initializeScene(std::string fileName) {
                 remainingData = ss.str().substr(ss.tellg());
                 
                 std::smatch match;
-                std::regex verticePoints("([1-9]+) ([1-9]+) ([1-9]+)");
-                std::regex verticesAndNormals("([1-9]+)//([1-9]+) ([1-9]+)//([1-9]+) ([1-9]+)//([1-9]+)");
-                std::regex verticesAndTexture("([1-9]+)/([1-9]+) ([1-9]+)/([1-9]+) ([1-9]+)/([1-9]+)");
+                std::regex verticePoints("([0-9]+) ([0-9]+) ([0-9]+)"); // match flat-shaded triangle
+                std::regex verticesAndNormals("([0-9]+)//([0-9]+) ([0-9]+)//([0-9]+) ([0-9]+)//([0-9]+)"); // match smooth-shaded triangle
+                std::regex verticesAndTexture("([0-9]+)/([0-9]+) ([0-9]+)/([0-9]+) ([0-9]+)/([0-9]+)"); // match flat-shaded triangle with texture
+                std::regex verticesAndTextureWithNormals("([0-9]+)/([0-9]+)/([0-9]+) ([0-9]+)/([0-9]+)/([0-9]+) ([1-9]+)/([1-9]+)/([1-9]+)"); // match smooth-shaded triangle with texture
 
                 if (std::regex_search(remainingData, match, verticePoints)) {
                     int v1, v2, v3;
@@ -229,10 +231,9 @@ int Scene::initializeScene(std::string fileName) {
                     v3 = stoi(match[5]);
                     vn3 = stoi(match[6]);
                     Material material = mtlcolor;
-                    Object *triangle = new SmoothShadedTriangle(vertices[v1 - 1], vertices[v2 - 1], vertices[v3 - 1], material,
+                    Object* triangle = new SmoothShadedTriangle(vertices[v1 - 1], vertices[v2 - 1], vertices[v3 - 1], material,
                                                                 normals[vn1 - 1], normals[vn2 - 1], normals[vn3 - 1]);
                     objects.push_back(triangle);
-                    std::cout << "WITH NORMS";
                 } else if (std::regex_search(remainingData, match, verticesAndTexture)) {
                     int v1, v2, v3, vt1, vt2, vt3;
                     v1 = stoi(match[1]);
@@ -241,9 +242,30 @@ int Scene::initializeScene(std::string fileName) {
                     vt2 = stoi(match[4]);
                     v3 = stoi(match[5]);
                     vt3 = stoi(match[6]);
+                    Material material = mtlcolor;
+                    Object *triangle = new Triangle(vertices[v1 - 1], vertices[v2 - 1], vertices[v3 - 1],
+                                                    material, textureCoords[vt1 - 1], textureCoords[vt2 - 1], textureCoords[vt3 - 1]);
+                    objects.push_back(triangle);
+                } else if (std::regex_search(remainingData, match, verticesAndTextureWithNormals)) {
+                    int v1, v2, v3, vt1, vt2, vt3, vn1, vn2, vn3;
+                    v1 = stoi(match[1]);
+                    vt1 = stoi(match[2]);
+                    vn1 = stoi(match[3]);
+                    v2 = stoi(match[4]);
+                    vt2 = stoi(match[5]);
+                    vn2 = stoi(match[6]);
+                    v3 = stoi(match[7]);
+                    vt3 = stoi(match[8]);
+                    vn3 = stoi(match[9]);
+                    Material material = mtlcolor;
+                    Object *triangle = new SmoothShadedTriangle(vertices[v1 - 1], vertices[v2 - 1], vertices[v3 - 1], material,
+                                                                textureCoords[vt1 - 1], textureCoords[vt2 - 1], textureCoords[vt3 - 1],
+                                                                normals[vn1 - 1], normals[vn2 - 1], normals[vn3 - 1]);
+                    objects.push_back(triangle);
+                } else {
+                    std::cout << "Invalid syntax for 'f' parameter" << std::endl;
+                    return -1;
                 }
-
-
 
             } else if (keyword.compare("vn") == 0) {
                 float nx, ny, nz;
@@ -255,6 +277,30 @@ int Scene::initializeScene(std::string fileName) {
                     return -1;
                 }
                 normals.push_back(Vector3(nx, ny, nz));
+            } else if (keyword.compare("texture") == 0) {
+                std::string ppmfile;
+                ss >> ppmfile;
+
+                if (ss.fail()) {
+                    std::cout << "Invalid input for texture. Must provide file name" << std::endl;
+                    return -1;
+                }
+                if (!utils::readTextureFile(ppmfile, mtlcolor)) {
+                    return -1;
+                }
+
+            } else if (keyword.compare("vt") == 0) {
+                float u, v;
+                ss >> u;
+                ss >> v;
+
+                if (ss.fail()) {
+                    std::cout << "Invalid input for vt. Must provide u v" << std::endl;
+                    return -1;
+                }
+
+                textureCoords.push_back(Vector2(u, v));
+
             } else if (!utils::containsWhiteSpaceOrEmpty(keyword)) {
                 std::cout << keyword << " is not a valid keyword" << std::endl;
                 return -1;
@@ -338,7 +384,7 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
     float kd = material.getKd();
     float ks = material.getKs();
     float n = material.getN();
-    Color diffuseColor = material.getDiffuseColor();
+    Color diffuseColor;
     Color specularColor = material.getSpecularColor();
     Color localIllumination(0.0f, 0.0f, 0.0f);
     int numberOfJitteredRays = 50;
@@ -390,6 +436,8 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
         H = (L + V) / 2.0f;
         H.normalize();
 
+        diffuseColor = intersectedObject.calculateColor(intersectionPoint);
+        // std::cout << diffuseColor << std::endl;
         localIllumination = localIllumination + (shadowFlag * (kd * diffuseColor * std::max(0.0f, (N.dot(L))) + ks * specularColor * pow(std::max(0.0f, (N.dot(H))), n)));
 
 
@@ -458,32 +506,33 @@ Vector3 Scene::jitterLocation(const Vector3& location, float jitterAmount) const
     return Vector3(xJitter, yJitter, zJitter);
 }
 
-    std::ostream &operator<<(std::ostream &out, const Scene &scene)
-{
-    out << "scene: " << std::endl
-        << "eye: " << scene.eye << std::endl
-        << "viewdir: " << scene.viewdir << std::endl
-        << "updir: " << scene.updir << std::endl
-        << "vfov: " << scene.vfov << std::endl
-        << "imgWidth: " << scene.imgWidth << std::endl
-        << "imgHeight: " << scene.imgHeight << std::endl
-        << "bkgcolor: " << scene.bkgcolor << std::endl
-        << "mtlcolor: " << scene.mtlcolor << std::endl
-        << "u: " << scene.u << std::endl
-        << "v: " << scene.v << std::endl
-        << "viewHeight: " << scene.viewHeight << std::endl
-        << "viewWidth: " << scene.viewWidth << std::endl
-        << "ul: " << scene.ul << std::endl
-        << "ur: " << scene.ur << std::endl
-        << "ll: " << scene.ll << std::endl
-        << "lr: " << scene.lr << std::endl
-        << "depthcueingflag: " << scene.depthCueingFlag << " " << scene.depthCue << std::endl;
-    for (Object* object : scene.objects) {
-        object->printInfo();
+    std::ostream &operator<<(std::ostream &out, const Scene &scene) {
+        out << "scene: " << std::endl
+            << "eye: " << scene.eye << std::endl
+            << "viewdir: " << scene.viewdir << std::endl
+            << "updir: " << scene.updir << std::endl
+            << "vfov: " << scene.vfov << std::endl
+            << "imgWidth: " << scene.imgWidth << std::endl
+            << "imgHeight: " << scene.imgHeight << std::endl
+            << "bkgcolor: " << scene.bkgcolor << std::endl
+            << "mtlcolor: " << scene.mtlcolor << std::endl
+            << "u: " << scene.u << std::endl
+            << "v: " << scene.v << std::endl
+            << "viewHeight: " << scene.viewHeight << std::endl
+            << "viewWidth: " << scene.viewWidth << std::endl
+            << "ul: " << scene.ul << std::endl
+            << "ur: " << scene.ur << std::endl
+            << "ll: " << scene.ll << std::endl
+            << "lr: " << scene.lr << std::endl
+            << "depthcueingflag: " << scene.depthCueingFlag << " " << scene.depthCue << std::endl;
+        for (Object *object : scene.objects)
+        {
+            object->printInfo();
+        }
+        for (Light *light : scene.lights)
+        {
+            // out << *light << std::endl;
+            light->printInfo();
+        }
+        return out;
     }
-    for (Light* light : scene.lights) {
-        // out << *light << std::endl;
-        light->printInfo();
-    }
-    return out;
-}

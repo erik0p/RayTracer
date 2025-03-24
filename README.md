@@ -1,5 +1,9 @@
 # RayTracer
 
+# TODO
+- add bi-linear interpolation for texture lookup
+- add functionality to read normal maps
+
 # Notes
 - Flat-shaded triangles are contained in the Triangle class.
 - Smooth-shaded triangles are contained in the SmoothShadedTriangle class.

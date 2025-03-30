@@ -1,11 +1,14 @@
 # RayTracer
 
+# TODO
+- add bi-linear interpolation for texture lookup
+- add functionality to read normal maps
+
 # Notes
 - Flat-shaded triangles are contained in the Triangle class.
 - Smooth-shaded triangles are contained in the SmoothShadedTriangle class.
 - The file reader currently expects that vertices, normals, and texturecoords before the faces are defined.
 - Need to refactor Objects to no longer have a Material object, and instead use a material index. The program consumes a large amount of memory and this should help reduce memory usage. Example7.txt used over 1.5gb of memory
-- obj and texture files obtained from https://free3d.com/3d-model/fruit-v1--195897.html.
 - Textures must be placed in the input/texture/ directory for the program to find it.
 - Point lights slow down the program significantly due to needing to shoot many jittered shadow rays
 - showcase image obj file and texture obtained from https://www.cgtrader.com/free-3d-models/exterior/landscape/free-low-poly-granite-rock-108f002d-0232-4af4-8906-fe0dd21ba16e

@@ -112,12 +112,13 @@ class Scene {
          * shades a ray using the Blinn-Phong model
          *
          * @param ray the ray to shade
+         * @param material the material of the object intersected with the ray
          * @param intersectionPoint the point where the ray intersects the object
          * @param intersectedObject the object intersected by the ray
          * 
          * @return the illuminated at the interesected point
          */
-        Color shadeRay(const Ray& ray,const Vector3& intersectionPoint, const Object& intersectedObject) const;
+        Color shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Object& intersectedObject) const;
 
         /**
          * traces a shadow to test if it interesects an object

@@ -433,7 +433,7 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
     // get color of object if there was an intersection
     if (closestObject != NULL) {
         Vector3 intersectionPoint = ray.getOrigin() + minT * ray.getDir();
-        Color color = shadeRay(ray, intersectionPoint, *closestObject);
+        Color color = shadeRay(ray, closestObject->getMaterial(), intersectionPoint, *closestObject);
 
         // When Ks = 0 the surface will not reflect rays
         if (closestObject->getMaterial().getKs() == 0.0f) {
@@ -456,9 +456,6 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
         float fr = f0 + (1.0f - f0) * pow(1.0f - alpha, 5.0f); // fresnel reflectance coefficient
 
         fr = std::clamp(fr, f0, 1.0f);
-        // if (fr > 1.0f || fr < f0) {
-            // std::cout << "fr:" << fr << " f0 = " << f0 << " alpha: " << pow(1.0f - alpha, 5) << std::endl;
-        // }
         Color reflectionColor = fr * recursiveTraceRay(reflectedRay, maxDepth - 1, closestObject);
 
         return color + reflectionColor;
@@ -468,9 +465,8 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
     return bkgcolor.getDiffuseColor();
 }
 
-Color Scene::shadeRay(const Ray& ray, const Vector3& intersectionPoint, const Object& intersectedObject) const {
+Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Object& intersectedObject) const {
     Color colorResult;
-    Material material = intersectedObject.getMaterial();
     float ka = material.getKa();
     float kd = material.getKd();
     float ks = material.getKs();

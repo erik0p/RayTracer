@@ -55,7 +55,7 @@ std::ostream& operator<<(std::ostream& out, const Material& material) {
         << " ks: " << material.getKs()
         << " n: " << material.getN() << std::endl
         << "refraction: " << material.getRefractionIndex() 
-        << "opacity: " << material.getOpacity()
+        << " opacity: " << material.getOpacity()
         << " texture: " << "width: " << material.getTextureWidth()
         << " height: " << material.getTextureHeight();
 

@@ -20,7 +20,8 @@ class Scene {
         float imgWidth;
         float imgHeight;
 
-        Color bkgcolor;
+        // Color bkgcolor;
+        Material bkgcolor;
         // Color mtlcolor;
         Material mtlcolor;
         std::vector<Object*> objects;
@@ -45,6 +46,8 @@ class Scene {
         std::vector<Vector3> vertices;
         std::vector<Vector3> normals;
         std::vector<Vector2> textureCoords;
+
+        bool softShadowFlag;
        
     public:
         Scene();
@@ -56,7 +59,8 @@ class Scene {
         const float& getVfov() const { return vfov; }
         const float& getImgWidth() const { return imgWidth; }
         const float& getImgHeight() const { return imgHeight; }
-        const Color& getBkgcolor() const { return bkgcolor; }
+        // const Color& getBkgcolor() const { return bkgcolor; }
+        const Material& getBkgcolor() const { return bkgcolor; }
         const Material& getMtlcolor() const { return mtlcolor; }
         const std::vector<Object*> getObjects() const { return objects; }
         const Vector3& getUl() const { return ul; }
@@ -71,6 +75,7 @@ class Scene {
         const std::vector<Vector3> getVertices() const { return vertices; }
         const std::vector<Vector3> getNormals() const { return normals; }
         const std::vector<Vector2> getTextureCoords() const { return textureCoords; }
+        const bool getSoftShadowFlag() const { return softShadowFlag; }
 
 
         /**
@@ -91,6 +96,8 @@ class Scene {
          */
         Color traceRay(const Ray& ray) const;
 
+        Color recursiveTraceRay(const Ray& ray, int depth, const Object* originObject) const;
+
         /**
          * converts a row and col in an image to a 3d location in the view space
          *
@@ -105,13 +112,12 @@ class Scene {
          * shades a ray using the Blinn-Phong model
          *
          * @param ray the ray to shade
-         * @param material the material of the object intersected with the ray
          * @param intersectionPoint the point where the ray intersects the object
          * @param intersectedObject the object intersected by the ray
          * 
          * @return the illuminated at the interesected point
          */
-        Color shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Object& intersectedObject) const;
+        Color shadeRay(const Ray& ray,const Vector3& intersectionPoint, const Object& intersectedObject) const;
 
         /**
          * traces a shadow to test if it interesects an object

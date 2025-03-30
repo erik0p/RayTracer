@@ -44,9 +44,9 @@ Color Color::operator*(const float& scalar) {
 }
 
 void Color::clamp() {
-    std::clamp(r, 0.0f, 1.0f);
-    std::clamp(g, 0.0f, 1.0f);
-    std::clamp(b, 0.0f, 1.0f);
+    r = std::clamp(r, 0.0f, 1.0f);
+    g = std::clamp(g, 0.0f, 1.0f);
+    b = std::clamp(b, 0.0f, 1.0f);
 }
 
 std::ostream& operator<<(std::ostream& out, const Color& color) {

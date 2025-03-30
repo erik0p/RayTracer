@@ -11,6 +11,8 @@ class Material {
         float kd; // diffuse
         float ks; // specular
         float n; // intensity
+        float opacity;
+        float refractionIndex;
         bool textureFlag;
         int textureHeight;
         int textureWidth;
@@ -28,8 +30,10 @@ class Material {
          * @param kd_ the diffuse scalar
          * @param ks_ the specular scalar
          * @param n_ the magnitude of specular highlight intensity
+         * @param opacity_ the material's opacity
+         * @param refractionIndex_ the material's index of refraction
          */
-        Material(const Color& diffuseColor_, const Color& specularColor_, float ka_, float kd_, float ks_, float n_);
+        Material(const Color& diffuseColor_, const Color& specularColor_, float ka_, float kd_, float ks_, float n_, float opacity_, float refractionIndex_);
 
         /**
          * constructor for material when using as a texture
@@ -43,7 +47,7 @@ class Material {
          * @param textureHeight_ height of the texture
          * @param texture_ 2d array to store the texture colors
          */
-        Material(float ka_, float kd_, float ks_, float n_, const Color& specularColor_, 
+        Material(float ka_, float kd_, float ks_, float n_, float opacity, float refractionIndex, const Color& specularColor_, 
             int textureWidth_, int textureHeight_, std::vector<std::vector<Color>> texture_);
 
         const Color& getDiffuseColor() const { return diffuseColor; } 
@@ -52,6 +56,8 @@ class Material {
         const float getKd() const { return kd; }
         const float getKs() const { return ks; }
         const float getN() const { return n; }
+        const float getOpacity() const { return opacity; }
+        const float getRefractionIndex() const { return refractionIndex; }
         const bool getTextureFlag() const { return textureFlag; }
         const int getTextureWidth() const { return textureWidth; }
         const int getTextureHeight() const { return textureHeight; }
@@ -66,7 +72,7 @@ class Material {
         Color lookupColor(int i, int j) const;
 
         /**
-         * Overload the out stream operator to print a vector3
+         * Overload the out stream operator to print material info
          *
          * @param out the outstream
          * @param material the material object whose fields are printed

@@ -41,6 +41,7 @@ int Scene::initializeScene(std::string fileName) {
 
     // initialize flags
     depthCueingFlag = false;
+    softShadowFlag = false;
 
     if (inputFile.is_open()) {
         while (std::getline(inputFile, read)) {
@@ -101,18 +102,19 @@ int Scene::initializeScene(std::string fileName) {
                 imgHeight = imgHeight_;
 
             } else if (keyword.compare("bkgcolor") == 0) {
-                float r, g, b;
+                float r, g, b, refraction;
                 ss >> r;
                 ss >> g;
                 ss >> b;
+                ss >> refraction;
                 if (ss.fail()) {
-                    std::cout << "Invalid input for bkgcolor parameter. Must provide three floats 'bkgcolor r g b'" << std::endl;
+                    std::cout << "Invalid input for bkgcolor parameter. Must provide four floats 'bkgcolor r g b refraction'" << std::endl;
                     return -1;
                 }
-                bkgcolor = Color(r, g, b);
+                bkgcolor = Material(Color(r, g, b), Color(), 0, 0, 0, 0, 0, refraction);
 
             } else if (keyword.compare("mtlcolor") == 0) {
-                float odr, odg, odb, osr, osg, osd, ka, kd, ks, n;
+                float odr, odg, odb, osr, osg, osd, ka, kd, ks, n, opacity, refraction;
                 ss >> odr;
                 ss >> odg;
                 ss >> odb;
@@ -123,12 +125,14 @@ int Scene::initializeScene(std::string fileName) {
                 ss >> kd;
                 ss >> ks;
                 ss >> n;
+                ss >> opacity;
+                ss >> refraction;
                 if (ss.fail()) {
                     std::cout << "Invalid input for mtlcolor parameter. " <<
-                    "Must provide 10 floats 'mtlcolor odr odg odb osr osg osb ka kd ks n'" << std::endl;
+                    "Must provide 12 floats 'mtlcolor odr odg odb osr osg osb ka kd ks n opacity refraction'" << std::endl;
                     return -1;
                 }
-                mtlcolor = Material(Color(odr, odg, odb), Color(osr, osg, osd), ka, kd, ks, n);
+                mtlcolor = Material(Color(odr, odg, odb), Color(osr, osg, osd), ka, kd, ks, n, opacity, refraction);
             } else if (keyword.compare("sphere") == 0) {
                 float x, y, z, r;
                 ss >> x;
@@ -301,6 +305,23 @@ int Scene::initializeScene(std::string fileName) {
 
                 textureCoords.push_back(Vector2(u, v));
 
+            } else if (keyword.compare("softshadows") == 0) {
+                int flag;
+                ss >> flag;
+                if (ss.fail()) {
+                    std::cout << "Invalid input for softshadows flag. Must be 0 or 1" << std::endl;
+                    return -1;
+                }
+
+                if (flag == 0) {
+                    softShadowFlag = false;
+                } else if (flag == 1) {
+                    std::cout << "Using soft shadows. May take a while" << std::endl;
+                    softShadowFlag = true;
+                } else {
+                    std::cout << "Invalid input for softshadows flag. Must be 0 or 1" << std::endl;
+                    return -1;
+                }
             } else if (!utils::containsWhiteSpaceOrEmpty(keyword)) {
                 std::cout << keyword << " is not a valid keyword" << std::endl;
                 return -1;
@@ -352,14 +373,56 @@ Vector3 Scene::imageToView(int row, int col) const {
 }
 
 Color Scene::traceRay(const Ray& ray) const {
-    Color color = bkgcolor;
+    int maxDepth = 10;
+    Color color = recursiveTraceRay(ray, maxDepth, NULL);
+    color.clamp();
+    return color;
+    // Color color = bkgcolor;
+    // Color color = bkgcolor.getDiffuseColor();
+    // Object *closestObject = NULL;
+    // float minT = FLT_MAX;
+    
+    // // iterate through objects in the scene and find the object whose interesection is closest, if any
+    // for (Object* object : objects) {
+    //     float t = FLT_MAX;
+    //     if (object->rayIntersects(ray, t)) {
+    //         if (t < minT && t > 0.0f) {
+    //             minT = t;
+    //             closestObject = object;
+    //         }
+    //     }
+    // }
+
+    // // get color of object if there was an intersection
+    // if (closestObject != NULL) {
+    //     Vector3 intersectionPoint;
+    //     intersectionPoint = ray.getOrigin() + minT * ray.getDir();
+    //     color = shadeRay(ray, closestObject->getMaterial(), intersectionPoint, *closestObject);
+    //     Vector3 N = closestObject->calculateNormal(intersectionPoint);
+    //     Vector3 I = -1.0f * ray.getDir(); // Vector in opposite direction of the incoming ray
+    //     I.normalize();
+    //     Vector3 Rdir = 2.0f * (N.dot(I)) * (N - I); // reflected ray direction
+
+    //     Ray reflectedRay = Ray(intersectionPoint, Rdir);
+
+    //     color = color + recursiveTraceRay(reflectedRay, 5);
+    // }
+
+    // return color;
+}
+
+Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* originObject) const {
+    if (maxDepth <= 0) {
+        return Color(0.0f, 0.0f, 0.0f);
+    }
+
     Object *closestObject = NULL;
     float minT = FLT_MAX;
     
     // iterate through objects in the scene and find the object whose interesection is closest, if any
     for (Object* object : objects) {
         float t = FLT_MAX;
-        if (object->rayIntersects(ray, t)) {
+        if (object->rayIntersects(ray, t) && !object->equals(*originObject)) {
             if (t < minT && t > 0.0f) {
                 minT = t;
                 closestObject = object;
@@ -369,17 +432,45 @@ Color Scene::traceRay(const Ray& ray) const {
 
     // get color of object if there was an intersection
     if (closestObject != NULL) {
-        // color = closestObject->getMaterial().getDiffuseColor();
-        Vector3 intersectionPoint;
-        intersectionPoint = ray.getOrigin() + minT * ray.getDir();
-        color = shadeRay(ray, closestObject->getMaterial(), intersectionPoint, *closestObject);
+        Vector3 intersectionPoint = ray.getOrigin() + minT * ray.getDir();
+        Color color = shadeRay(ray, intersectionPoint, *closestObject);
+
+        // When Ks = 0 the surface will not reflect rays
+        if (closestObject->getMaterial().getKs() == 0.0f) {
+            return color;
+        }
+
+        Vector3 N = closestObject->calculateNormal(intersectionPoint);
+        Vector3 I = -1.0f * ray.getDir(); // Vector in opposite direction of the incident ray
+        I.normalize();
+
+        float alpha = N.dot(I); // cosine of the angle of incidence
+
+        Vector3 Rdir = 2.0f * alpha * N - I; // reflected ray direction
+        Rdir.normalize();
+
+        Ray reflectedRay = Ray(intersectionPoint, Rdir);
+
+        float refractionIndex = closestObject->getMaterial().getRefractionIndex();
+        float f0 = pow((refractionIndex - 1.0f) / (refractionIndex + 1.0f), 2);
+        float fr = f0 + (1.0f - f0) * pow(1.0f - alpha, 5.0f); // fresnel reflectance coefficient
+
+        fr = std::clamp(fr, f0, 1.0f);
+        // if (fr > 1.0f || fr < f0) {
+            // std::cout << "fr:" << fr << " f0 = " << f0 << " alpha: " << pow(1.0f - alpha, 5) << std::endl;
+        // }
+        Color reflectionColor = fr * recursiveTraceRay(reflectedRay, maxDepth - 1, closestObject);
+
+        return color + reflectionColor;
     }
 
-    return color;
+    // no intersection so return the background color
+    return bkgcolor.getDiffuseColor();
 }
 
-Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Object& intersectedObject) const {
+Color Scene::shadeRay(const Ray& ray, const Vector3& intersectionPoint, const Object& intersectedObject) const {
     Color colorResult;
+    Material material = intersectedObject.getMaterial();
     float ka = material.getKa();
     float kd = material.getKd();
     float ks = material.getKs();
@@ -390,21 +481,22 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
     int numberOfJitteredRays = 50;
     float jitterAmount = 0.01f;
 
-    // Calculate the local illumination for each light
-    for (Light *light : lights)
-    {
 
-        Vector3 L; // vector pointing towards light source
-        Vector3 N; // surface normal
-        Vector3 H; // direction halfway between light and direction towards the viewer
-        Vector3 V; // direction from intersection point to light
+    Vector3 L; // vector pointing towards light source
+    Vector3 N; // surface normal
+    Vector3 H; // direction halfway between light and direction towards the ray origin
+    Vector3 V; // direction from intersection point to ray origin
+
+    // Calculate the local illumination for each light
+    for (Light *light : lights) {
+
         float shadowFlag = 0.0f;
 
         L = light->getDirToSource(intersectionPoint);
         L.normalize();
 
-        // Check if point light (regular point light or attenuated). Do soft shadows in that case
-        if (!dynamic_cast<DirectionalLight*>(light)) {
+        // Check if point light (regular point light or attenuated) and softshadowflag is set to true. Do soft shadows in that case
+        if (!dynamic_cast<DirectionalLight*>(light) && softShadowFlag) {
             for (int i = 0; i < numberOfJitteredRays; i++) {
 
                 // Get a new jittered location from the original point light location
@@ -421,7 +513,7 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
             }
             // average the shadows
             shadowFlag = shadowFlag / numberOfJitteredRays;
-        } else { // hard shadows for directional lights
+        } else { // hard shadows 
             Ray shadowRay(intersectionPoint, L);
             shadowFlag = traceShadow(shadowRay, intersectedObject, *light);
         }
@@ -430,11 +522,16 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
         // N.normalize();
         N = intersectedObject.calculateNormal(intersectionPoint);
 
-        V = ray.getOrigin() - intersectionPoint;
+        // V = ray.getOrigin() - intersectionPoint;
+        V = -1.0f * ray.getDir();
         V.normalize();
 
-        H = (L + V) / 2.0f;
+        // H = (L + V) / 2.0f;
+        H = (L + V);
         H.normalize();
+
+        // H = (L + I);
+        // H.normalize();
 
         // calculate diffuse color for the object
         diffuseColor = intersectedObject.calculateColor(intersectionPoint);
@@ -452,8 +549,9 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
     // add in the ambient component
     colorResult = ka * diffuseColor + localIllumination;
 
-    // Apply depthcueing to the illumination 
-    if (depthCueingFlag) {
+    // Apply depthcueing to the illumination
+    if (depthCueingFlag)
+    {
         float distance = Vector3::distanceBetween(eye, intersectionPoint);
         colorResult = depthCue.applyDepthCueing(colorResult, distance);
     }
@@ -466,17 +564,17 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
 
 float Scene::traceShadow(const Ray& ray, const Object& originObject, Light& light) const {
     float shadowFlag = 1.0f;
-    
+
     // iterate through objects in the scene and find the object whose interesection is closest, if any
-    for (Object* object : objects) {
+    for (Object *object : objects) {
         float t = FLT_MAX;
 
         if (!object->equals(originObject)) { // don't check the object where the shadow ray originates
 
             if (object->rayIntersects(ray, t)) {
-                
+
                 if (t > 0.0f) { // ray intersects sphere
-                    if (dynamic_cast<DirectionalLight*>(&light)) {
+                    if (dynamic_cast<DirectionalLight *>(&light)) {
                         shadowFlag = 0.0f;
                     } else {
                         float distance = Vector3::distanceBetween(ray.getOrigin(), light.getDirOrPoint());

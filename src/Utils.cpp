@@ -66,8 +66,10 @@ bool utils::readTextureFile(std::string ppmfile, Material& material) {
     float kd = material.getKd();
     float ks = material.getKs();
     float n = material.getN();
+    float opacity = material.getOpacity();
+    float refractionIndex = material.getRefractionIndex();
     Color specularColor = material.getSpecularColor();
-    material = Material(ka, kd, ks, n, specularColor, width, height, texture);
+    material = Material(ka, kd, ks, n, opacity, refractionIndex, specularColor, width, height, texture);
     std::cout << "read input/texture/" + ppmfile << std::endl;
     return true;
 }

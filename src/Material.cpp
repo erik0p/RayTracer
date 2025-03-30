@@ -10,24 +10,28 @@ Material::Material() {
 }
 
 Material::Material(const Color& diffuseColor_, const Color& specularColor_, 
-    float ka_, float kd_, float ks_, float n_) {
+    float ka_, float kd_, float ks_, float n_, float opacity_, float refractionIndex_) {
     diffuseColor = diffuseColor_;
     specularColor = specularColor_;
     ka = ka_;
     kd = kd_;
     ks = ks_;
     n = n_;
+    opacity = opacity_;
+    refractionIndex = refractionIndex_;
     textureHeight = 0;
     textureWidth = 0;
     textureFlag = false;
 }
 
-Material::Material(float ka_, float kd_, float ks_, float n_, const Color& specularColor_, 
+Material::Material(float ka_, float kd_, float ks_, float n_, float opacity_, float refractionIndex_, const Color& specularColor_, 
     int textureWidth_, int textureHeight_, std::vector<std::vector<Color>> texture_) {
     ka = ka_;
     kd = kd_;
     ks = ks_;
     n = n_;
+    opacity = opacity_;
+    refractionIndex = refractionIndex_;
     specularColor = specularColor_;
     textureFlag = true;
     textureWidth = textureWidth_;
@@ -50,7 +54,9 @@ std::ostream& operator<<(std::ostream& out, const Material& material) {
         << " kd: " << material.getKd()
         << " ks: " << material.getKs()
         << " n: " << material.getN() << std::endl
-        << "texture: " << "width: " << material.getTextureWidth()
+        << "refraction: " << material.getRefractionIndex() 
+        << "opacity: " << material.getOpacity()
+        << " texture: " << "width: " << material.getTextureWidth()
         << " height: " << material.getTextureHeight();
 
     return out;

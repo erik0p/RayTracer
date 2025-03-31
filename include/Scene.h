@@ -20,9 +20,7 @@ class Scene {
         float imgWidth;
         float imgHeight;
 
-        // Color bkgcolor;
         Material bkgcolor;
-        // Color mtlcolor;
         Material mtlcolor;
         std::vector<Object*> objects;
         std::vector<Light*> lights;
@@ -48,6 +46,8 @@ class Scene {
         std::vector<Vector2> textureCoords;
 
         bool softShadowFlag;
+
+        std::vector<Material> materialStack;
        
     public:
         Scene();
@@ -59,7 +59,6 @@ class Scene {
         const float& getVfov() const { return vfov; }
         const float& getImgWidth() const { return imgWidth; }
         const float& getImgHeight() const { return imgHeight; }
-        // const Color& getBkgcolor() const { return bkgcolor; }
         const Material& getBkgcolor() const { return bkgcolor; }
         const Material& getMtlcolor() const { return mtlcolor; }
         const std::vector<Object*> getObjects() const { return objects; }
@@ -94,9 +93,9 @@ class Scene {
          * 
          * @return the color of the pixel hit by the ray
          */
-        Color traceRay(const Ray& ray) const;
+        Color traceRay(const Ray& ray);
 
-        Color recursiveTraceRay(const Ray& ray, int depth, const Object* originObject) const;
+        Color recursiveTraceRay(const Ray& ray, int depth, const Object* originObject);
 
         /**
          * converts a row and col in an image to a 3d location in the view space

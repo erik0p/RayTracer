@@ -10,6 +10,7 @@ private:
 public:
   const static Vector3 UP;
   const static Vector3 ZERO;
+
   Vector3();
 
   /**

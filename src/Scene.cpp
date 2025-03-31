@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <random>
 #include <regex>
+#include <stack>
 
 Scene::Scene() {}
 Scene::~Scene() {
@@ -372,46 +373,16 @@ Vector3 Scene::imageToView(int row, int col) const {
     return result;
 }
 
-Color Scene::traceRay(const Ray& ray) const {
+Color Scene::traceRay(const Ray& ray) {
     int maxDepth = 10;
+    materialStack.clear();
+    materialStack.push_back(bkgcolor);
     Color color = recursiveTraceRay(ray, maxDepth, NULL);
     color.clamp();
     return color;
-    // Color color = bkgcolor;
-    // Color color = bkgcolor.getDiffuseColor();
-    // Object *closestObject = NULL;
-    // float minT = FLT_MAX;
-    
-    // // iterate through objects in the scene and find the object whose interesection is closest, if any
-    // for (Object* object : objects) {
-    //     float t = FLT_MAX;
-    //     if (object->rayIntersects(ray, t)) {
-    //         if (t < minT && t > 0.0f) {
-    //             minT = t;
-    //             closestObject = object;
-    //         }
-    //     }
-    // }
-
-    // // get color of object if there was an intersection
-    // if (closestObject != NULL) {
-    //     Vector3 intersectionPoint;
-    //     intersectionPoint = ray.getOrigin() + minT * ray.getDir();
-    //     color = shadeRay(ray, closestObject->getMaterial(), intersectionPoint, *closestObject);
-    //     Vector3 N = closestObject->calculateNormal(intersectionPoint);
-    //     Vector3 I = -1.0f * ray.getDir(); // Vector in opposite direction of the incoming ray
-    //     I.normalize();
-    //     Vector3 Rdir = 2.0f * (N.dot(I)) * (N - I); // reflected ray direction
-
-    //     Ray reflectedRay = Ray(intersectionPoint, Rdir);
-
-    //     color = color + recursiveTraceRay(reflectedRay, 5);
-    // }
-
-    // return color;
 }
 
-Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* originObject) const {
+Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* originObject) {
     if (maxDepth <= 0) {
         return Color(0.0f, 0.0f, 0.0f);
     }
@@ -433,32 +404,65 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
     // get color of object if there was an intersection
     if (closestObject != NULL) {
         Vector3 intersectionPoint = ray.getOrigin() + minT * ray.getDir();
-        Color color = shadeRay(ray, closestObject->getMaterial(), intersectionPoint, *closestObject);
 
-        // When Ks = 0 the surface will not reflect rays
-        if (closestObject->getMaterial().getKs() == 0.0f) {
-            return color;
-        }
+        // shaderay will return ambient + diffuse + specular illumination
+        Color color = shadeRay(ray, closestObject->getMaterial(), intersectionPoint, *closestObject);
 
         Vector3 N = closestObject->calculateNormal(intersectionPoint);
         Vector3 I = -1.0f * ray.getDir(); // Vector in opposite direction of the incident ray
         I.normalize();
 
-        float alpha = N.dot(I); // cosine of the angle of incidence
+        float NdotI = N.dot(I); // cosine of the angle of incidence
 
-        Vector3 Rdir = 2.0f * alpha * N - I; // reflected ray direction
+        // if (NdotI < 0.0f) { // flip normal direction if exiting sphere
+        //     N = -1.0f * N;
+        //     NdotI = N.dot(I);
+        // }
+
+        Vector3 Rdir = 2.0f * NdotI * N - I; // reflected ray direction
         Rdir.normalize();
 
         Ray reflectedRay = Ray(intersectionPoint, Rdir);
 
-        float refractionIndex = closestObject->getMaterial().getRefractionIndex();
-        float f0 = pow((refractionIndex - 1.0f) / (refractionIndex + 1.0f), 2);
-        float fr = f0 + (1.0f - f0) * pow(1.0f - alpha, 5.0f); // fresnel reflectance coefficient
+        float nt = closestObject->getMaterial().getRefractionIndex();
+        float f0 = pow((nt - 1.0f) / (nt + 1.0f), 2.0f);
+        float fr = f0 + (1.0f - f0) * pow(1.0f - NdotI, 5.0f); // fresnel reflectance coefficient
 
+        // fr assumed to range [f0, 1.0]
         fr = std::clamp(fr, f0, 1.0f);
-        Color reflectionColor = fr * recursiveTraceRay(reflectedRay, maxDepth - 1, closestObject);
 
-        return color + reflectionColor;
+        Color reflectionColor;
+
+        // object will reflect when ks > 0
+        if (closestObject->getMaterial().getKs() > 0.0f) {
+            reflectionColor = fr * recursiveTraceRay(reflectedRay, maxDepth - 1, closestObject);
+        }
+
+        float a = closestObject->getMaterial().getOpacity();
+        float ni = materialStack.back().getRefractionIndex();
+        // std::cout << "nt : " << nt << " ni: " << ni << std::endl;
+        // f0 = pow(((nt - ni) / (nt + ni)), 2.0f);
+        // fr = f0 + (1.0f - f0) * pow(1.0f - NdotI, 5.0f); // fresnel reflectance coefficient
+
+        float discriminate = 1.0f - pow((ni / nt), 2.0f) * (1.0f - pow(NdotI, 2.0f));
+
+
+        Color transmittedColor;
+
+        // object will transmit ray if opacity < 1 and there is no total internal reflection
+        if (a < 1.0f && discriminate >= 0) {
+
+            Vector3 transmittedDir = (-1.0f * N) * sqrt(discriminate) + (ni / nt) * ((NdotI) * N - I);
+            transmittedDir.normalize();
+
+            Ray transmittedRay = Ray(intersectionPoint, transmittedDir);
+
+            materialStack.push_back(closestObject->getMaterial());
+            transmittedColor = (1.0f - fr) * (1.0f - a) * recursiveTraceRay(transmittedRay, maxDepth - 1, closestObject);
+            // materialStack.pop_back();
+        }
+
+        return color + reflectionColor + transmittedColor;
     }
 
     // no intersection so return the background color

@@ -95,7 +95,7 @@ class Scene {
          */
         Color traceRay(const Ray& ray);
 
-        Color recursiveTraceRay(const Ray& ray, int depth, const Object* originObject);
+        Color recursiveTraceRay(const Ray& ray, int depth, const Object* originObject, bool insideObject);
 
         /**
          * converts a row and col in an image to a 3d location in the view space

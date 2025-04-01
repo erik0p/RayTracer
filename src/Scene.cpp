@@ -377,12 +377,12 @@ Color Scene::traceRay(const Ray& ray) {
     int maxDepth = 10;
     materialStack.clear();
     materialStack.push_back(bkgcolor);
-    Color color = recursiveTraceRay(ray, maxDepth, NULL);
+    Color color = recursiveTraceRay(ray, maxDepth, NULL, false);
     color.clamp();
     return color;
 }
 
-Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* originObject) {
+Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* originObject, bool insideObject) {
     if (maxDepth <= 0) {
         return Color(0.0f, 0.0f, 0.0f);
     }
@@ -409,15 +409,16 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
         Color color = shadeRay(ray, closestObject->getMaterial(), intersectionPoint, *closestObject);
 
         Vector3 N = closestObject->calculateNormal(intersectionPoint);
+
+        // If inside an object need to flip its normal direction
+        // if (insideObject) {
+        //     N = -1.0f * N;
+        // }
+
         Vector3 I = -1.0f * ray.getDir(); // Vector in opposite direction of the incident ray
         I.normalize();
 
         float NdotI = N.dot(I); // cosine of the angle of incidence
-
-        // if (NdotI < 0.0f) { // flip normal direction if exiting sphere
-        //     N = -1.0f * N;
-        //     NdotI = N.dot(I);
-        // }
 
         Vector3 Rdir = 2.0f * NdotI * N - I; // reflected ray direction
         Rdir.normalize();
@@ -429,40 +430,45 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
         float fr = f0 + (1.0f - f0) * pow(1.0f - NdotI, 5.0f); // fresnel reflectance coefficient
 
         // fr assumed to range [f0, 1.0]
-        fr = std::clamp(fr, f0, 1.0f);
+        // fr = std::clamp(fr, f0, 1.0f);
 
-        Color reflectionColor;
+        Color reflectedColor;
 
-        // object will reflect when ks > 0
+        // object will reflect only when ks > 0
         if (closestObject->getMaterial().getKs() > 0.0f) {
-            reflectionColor = fr * recursiveTraceRay(reflectedRay, maxDepth - 1, closestObject);
+            reflectedColor = fr * recursiveTraceRay(reflectedRay, maxDepth - 1, closestObject, insideObject);
         }
 
         float a = closestObject->getMaterial().getOpacity();
         float ni = materialStack.back().getRefractionIndex();
-        // std::cout << "nt : " << nt << " ni: " << ni << std::endl;
         // f0 = pow(((nt - ni) / (nt + ni)), 2.0f);
         // fr = f0 + (1.0f - f0) * pow(1.0f - NdotI, 5.0f); // fresnel reflectance coefficient
 
-        float discriminate = 1.0f - pow((ni / nt), 2.0f) * (1.0f - pow(NdotI, 2.0f));
+        float sqrtQuantity = 1.0f - pow((ni / nt), 2.0f) * (1.0f - pow(NdotI, 2.0f));
 
-
-        Color transmittedColor;
+        Color refractedColor;
 
         // object will transmit ray if opacity < 1 and there is no total internal reflection
-        if (a < 1.0f && discriminate >= 0) {
+        if (a < 1.0f && sqrtQuantity >= 0) {
 
-            Vector3 transmittedDir = (-1.0f * N) * sqrt(discriminate) + (ni / nt) * ((NdotI) * N - I);
+            Vector3 transmittedDir = (-1.0f * N) * sqrt(sqrtQuantity) + (ni / nt) * ((NdotI) * N - I);
             transmittedDir.normalize();
 
-            Ray transmittedRay = Ray(intersectionPoint, transmittedDir);
+            Ray refractedRay = Ray(intersectionPoint, transmittedDir);
 
-            materialStack.push_back(closestObject->getMaterial());
-            transmittedColor = (1.0f - fr) * (1.0f - a) * recursiveTraceRay(transmittedRay, maxDepth - 1, closestObject);
+            // if we are inside the object already and exiting use background refraction next
+            if (closestObject->equals(*originObject)) {
+                materialStack.push_back(bkgcolor);
+            } else {
+                materialStack.push_back(closestObject->getMaterial());
+            }
+
+            insideObject = !insideObject;
+            refractedColor = (1.0f - fr) * (1.0f - a) * recursiveTraceRay(refractedRay, maxDepth - 1, closestObject, insideObject);
             // materialStack.pop_back();
         }
 
-        return color + reflectionColor + transmittedColor;
+        return color + reflectedColor + refractedColor;
     }
 
     // no intersection so return the background color
@@ -575,14 +581,14 @@ float Scene::traceShadow(const Ray& ray, const Object& originObject, Light& ligh
 
                 if (t > 0.0f) { // ray intersects sphere
                     if (dynamic_cast<DirectionalLight *>(&light)) {
-                        shadowFlag = 0.0f;
+                        shadowFlag = shadowFlag * (1.0f - object->getMaterial().getOpacity());
                     } else {
                         float distance = Vector3::distanceBetween(ray.getOrigin(), light.getDirOrPoint());
 
                         if (t > distance) { // object is behind point light
                             shadowFlag = 1.0f;
                         } else {
-                            shadowFlag = 0.0f;
+                            shadowFlag = shadowFlag * (1.0f - object->getMaterial().getOpacity());
                         }
                     }
                 }

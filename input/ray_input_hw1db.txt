@@ -5,7 +5,7 @@ updir  0 1 0
 vfov 60
 
 
-bkgcolor 0.7 0.7 0.7 1
+bkgcolor 0.7 0.7 0.7 1.0
 
 light -3 15 10 1 1
 

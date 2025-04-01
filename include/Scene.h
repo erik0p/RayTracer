@@ -95,7 +95,7 @@ class Scene {
          */
         Color traceRay(const Ray& ray);
 
-        Color recursiveTraceRay(const Ray& ray, int depth, const Object* originObject, bool insideObject);
+        Color recursiveTraceRay(const Ray& ray, int depth, const Object* originObject, const Vector3* originIntersection, bool insideObject);
 
         /**
          * converts a row and col in an image to a 3d location in the view space
@@ -117,7 +117,7 @@ class Scene {
          * 
          * @return the illuminated at the interesected point
          */
-        Color shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Object& intersectedObject) const;
+        Color shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Object& intersectedObject, bool flipNormal) const;
 
         /**
          * traces a shadow to test if it interesects an object

@@ -18,7 +18,7 @@ class Object {
          * 
          * @return true if the ray interects the object
          */
-        virtual bool rayIntersects(const Ray& ray, float& minT) const = 0;
+        virtual bool rayIntersects(const Ray& ray, float& minT, float& maxT) const = 0;
         virtual bool equals(const Object& o) const = 0;
         virtual const Material& getMaterial() const = 0;
         virtual Vector3 calculateNormal(const Vector3& intersectionPoint) const = 0;

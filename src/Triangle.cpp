@@ -21,7 +21,7 @@ Triangle::Triangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material& material_
     material = material_;
 }
 
-bool Triangle::rayIntersects(const Ray& ray, float& minT) const {
+bool Triangle::rayIntersects(const Ray& ray, float& minT, float& maxT) const {
     float x = ray.getOrigin().getX();
     float y = ray.getOrigin().getY();
     float z = ray.getOrigin().getZ();
@@ -60,6 +60,7 @@ bool Triangle::rayIntersects(const Ray& ray, float& minT) const {
     }
 
     minT = t;
+    maxT = t;
 
     Vector3 intersectionPoint = ray.getOrigin() + t * ray.getDir();
 

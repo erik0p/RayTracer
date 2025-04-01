@@ -33,7 +33,7 @@ class Sphere : public Object {
          * 
          * @return true if the ray interects the sphere
          */
-        bool rayIntersects(const Ray& ray, float& minT) const override;
+        bool rayIntersects(const Ray& ray, float& minT, float& maxT) const override;
 
         /**
          * Calculates the normal at a given point

@@ -14,7 +14,7 @@ Sphere::Sphere(Vector3& center_, float radius_, Material& material_) {
 
 Sphere::~Sphere() {}
 
-bool Sphere::rayIntersects(const Ray& ray, float& minT) const {
+bool Sphere::rayIntersects(const Ray& ray, float& minT, float& maxT) const {
     float x = ray.getOrigin().getX();
     float y = ray.getOrigin().getY();
     float z = ray.getOrigin().getZ();
@@ -44,10 +44,12 @@ bool Sphere::rayIntersects(const Ray& ray, float& minT) const {
         // std::cout << "t1: " << t1 << ", t2: " << t2 << std::endl;
         if (t1 < minT && t1 > 0.0f) {
             minT = t1;
+            maxT = t2;
             intersectionFound = true;
         }
         if (t2 < minT && t2 > 0.0f) {
             minT = t2;
+            maxT = t1;
             intersectionFound = true;
         }
     } else if (discriminant == 0.0f) { // grazes sphere
@@ -55,6 +57,7 @@ bool Sphere::rayIntersects(const Ray& ray, float& minT) const {
         if (t < minT && t > 0.0f)
         {
             minT = t;
+            maxT = t;
             intersectionFound = true;
         }
     }

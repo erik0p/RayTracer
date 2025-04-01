@@ -55,7 +55,7 @@ class Triangle : public Object{
          * 
          * @return true if the ray interects the triangle
          */
-        bool rayIntersects(const Ray& ray, float& minT) const override;
+        bool rayIntersects(const Ray& ray, float& minT, float& maxT) const override;
 
         /**
          * Tests if a triangle object is equivalent to another. Equivalent triangles have the same vertices

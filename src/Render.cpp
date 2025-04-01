@@ -18,11 +18,18 @@ int main(int argc, char *argv[]) {
     // Get file name provided from command line
     std::string fileName = argv[1];
     Scene scene;
+
+    std::cout << "---------------------------" << std::endl;
+    std::cout << "Reading input description from " << fileName << std::endl;
+    std::cout << "---------------------------" << std::endl << std::endl;
     if (scene.initializeScene(fileName) == -1) { // check file was read successfully
-        std::cout << "Unable to read file" << std::endl;
+        std::cout << "Unable to read " << fileName << std::endl;
         return 0;
     }
-    std::cout << scene;
+    std::cout << "Successfully read input description" << std::endl << std::endl;; 
+
+    // debug
+    // std::cout << scene;
 
     // Remove .txt from file name
     std::string truncatedName = utils::truncateSuffix(fileName);
@@ -34,6 +41,10 @@ int main(int argc, char *argv[]) {
         outputFile << "# Raytracer" << std::endl;
         outputFile << scene.getImgWidth() << " " << scene.getImgHeight() << std::endl;
         outputFile << "255" << std::endl;
+
+        std::cout << "---------------------------" << std::endl;
+        std::cout << "Rendering image..." << std::endl;
+        std::cout << "---------------------------" << std::endl << std::endl;
 
         // Color in each pixel in the image
         for (int row = 0; row < scene.getImgHeight(); row++) {
@@ -49,8 +60,10 @@ int main(int argc, char *argv[]) {
                 Color pxColor = scene.traceRay(ray);
                 outputFile << pxColor << std::endl;
             }
+            std::cout << (int(row / scene.getImgHeight() * 100)) << "%\r";
         }
         outputFile.close();
     }
+    std::cout << "Done!" << std::endl;
     return 0;
 }

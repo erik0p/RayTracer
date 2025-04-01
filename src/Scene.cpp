@@ -350,8 +350,8 @@ int Scene::initializeScene(std::string fileName) {
     viewHeight = 2.0f * d * tan(utils::degToRad(0.5f * vfov));
     viewWidth = viewHeight * aspectRatio;
 
-    std::cout << "view aspect ratio: " << viewWidth / viewHeight << std::endl;
-    std::cout << "image aspect ratio: " << aspectRatio << std::endl;
+    // std::cout << "view aspect ratio: " << viewWidth / viewHeight << std::endl;
+    // std::cout << "image aspect ratio: " << aspectRatio << std::endl;
 
     // Find the point of each corner in the view window
     // +-*/ operators are overloaded to work with Vector3
@@ -377,12 +377,12 @@ Color Scene::traceRay(const Ray& ray) {
     int maxDepth = 10;
     materialStack.clear();
     materialStack.push_back(bkgcolor);
-    Color color = recursiveTraceRay(ray, maxDepth, NULL, false);
+    Color color = recursiveTraceRay(ray, maxDepth, NULL, NULL, false);
     color.clamp();
     return color;
 }
 
-Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* originObject, bool insideObject) {
+Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* originObject, const Vector3* originIntersection, bool insideObject) {
     if (maxDepth <= 0) {
         return Color(0.0f, 0.0f, 0.0f);
     }
@@ -393,10 +393,19 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
     // iterate through objects in the scene and find the object whose interesection is closest, if any
     for (Object* object : objects) {
         float t = FLT_MAX;
-        if (object->rayIntersects(ray, t) && !object->equals(*originObject)) {
+        float maxT = t;
+        float minDistance = 0.01f;
+        if (object->rayIntersects(ray, t, maxT) && (!object->equals(*originObject) || insideObject)) {
             if (t < minT && t > 0.0f) {
                 minT = t;
                 closestObject = object;
+
+                Vector3 intersection = ray.getOrigin() + t * ray.getDir();
+                if (originIntersection != NULL) {
+                    if (Vector3::distanceBetween(intersection, *originIntersection) < minDistance) {
+                        minT = maxT;
+                    }
+                }
             }
         }
     }
@@ -405,15 +414,20 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
     if (closestObject != NULL) {
         Vector3 intersectionPoint = ray.getOrigin() + minT * ray.getDir();
 
-        // shaderay will return ambient + diffuse + specular illumination
-        Color color = shadeRay(ray, closestObject->getMaterial(), intersectionPoint, *closestObject);
-
         Vector3 N = closestObject->calculateNormal(intersectionPoint);
 
+        Color color;
+
         // If inside an object need to flip its normal direction
-        // if (insideObject) {
-        //     N = -1.0f * N;
-        // }
+        if (insideObject) {
+            N = -1.0f * N;
+
+            // shaderay will return ambient + diffuse + specular illumination
+            color = shadeRay(ray, closestObject->getMaterial(), intersectionPoint, *closestObject, true);
+        } else  {
+            color = shadeRay(ray, closestObject->getMaterial(), intersectionPoint, *closestObject, false);
+        }
+
 
         Vector3 I = -1.0f * ray.getDir(); // Vector in opposite direction of the incident ray
         I.normalize();
@@ -436,7 +450,7 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
 
         // object will reflect only when ks > 0
         if (closestObject->getMaterial().getKs() > 0.0f) {
-            reflectedColor = fr * recursiveTraceRay(reflectedRay, maxDepth - 1, closestObject, insideObject);
+            reflectedColor = fr * recursiveTraceRay(reflectedRay, maxDepth - 1, closestObject, &intersectionPoint, insideObject);
         }
 
         float a = closestObject->getMaterial().getOpacity();
@@ -463,8 +477,8 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
                 materialStack.push_back(closestObject->getMaterial());
             }
 
-            insideObject = !insideObject;
-            refractedColor = (1.0f - fr) * (1.0f - a) * recursiveTraceRay(refractedRay, maxDepth - 1, closestObject, insideObject);
+            insideObject = !insideObject; // if object inside then will be outside. if object outside then will be inside
+            refractedColor = (1.0f - fr) * (1.0f - a) * recursiveTraceRay(refractedRay, maxDepth - 1, closestObject, &intersectionPoint, insideObject);
             // materialStack.pop_back();
         }
 
@@ -475,7 +489,7 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
     return bkgcolor.getDiffuseColor();
 }
 
-Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Object& intersectedObject) const {
+Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Object& intersectedObject, bool flipNormal) const {
     Color colorResult;
     float ka = material.getKa();
     float kd = material.getKd();
@@ -528,6 +542,10 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
         // N.normalize();
         N = intersectedObject.calculateNormal(intersectionPoint);
 
+        if (flipNormal) {
+            N = -1.0f * N;
+        }
+
         // V = ray.getOrigin() - intersectionPoint;
         V = -1.0f * ray.getDir();
         V.normalize();
@@ -574,10 +592,11 @@ float Scene::traceShadow(const Ray& ray, const Object& originObject, Light& ligh
     // iterate through objects in the scene and find the object whose interesection is closest, if any
     for (Object *object : objects) {
         float t = FLT_MAX;
+        float _ = 0.0f;
 
         if (!object->equals(originObject)) { // don't check the object where the shadow ray originates
 
-            if (object->rayIntersects(ray, t)) {
+            if (object->rayIntersects(ray, t, _)) {
 
                 if (t > 0.0f) { // ray intersects sphere
                     if (dynamic_cast<DirectionalLight *>(&light)) {

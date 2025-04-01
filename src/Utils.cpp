@@ -42,10 +42,6 @@ bool utils::readTextureFile(std::string ppmfile, Material& material) {
 
         texture = std::vector<std::vector<Color>>(height, std::vector<Color>(width));
 
-        // while (inputFile >> r >> g >> b) {
-        //     Color color = Color(r / 255.0, g / 255.0 , b / 255.0);
-        //     texture.push_back(std::vector<Color>(width));
-        // }
         for (int i = 0; i < height; ++i) {
             for (int j = 0; j < width; ++j) {
                 inputFile >> r >> g >> b;
@@ -70,6 +66,6 @@ bool utils::readTextureFile(std::string ppmfile, Material& material) {
     float refractionIndex = material.getRefractionIndex();
     Color specularColor = material.getSpecularColor();
     material = Material(ka, kd, ks, n, opacity, refractionIndex, specularColor, width, height, texture);
-    std::cout << "read input/texture/" + ppmfile << std::endl;
+    std::cout << "Read input/texture/" + ppmfile << std::endl;
     return true;
 }

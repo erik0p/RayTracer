@@ -117,7 +117,7 @@ class Scene {
          * 
          * @return the illuminated at the interesected point
          */
-        Color shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Object& intersectedObject, bool flipNormal) const;
+        Color shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Object& intersectedObject) const;
 
         /**
          * traces a shadow to test if it interesects an object

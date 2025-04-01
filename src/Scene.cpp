@@ -416,16 +416,11 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
 
         Vector3 N = closestObject->calculateNormal(intersectionPoint);
 
-        Color color;
+        Color color = shadeRay(ray, closestObject->getMaterial(), intersectionPoint, *closestObject);
 
         // If inside an object need to flip its normal direction
         if (insideObject) {
             N = -1.0f * N;
-
-            // shaderay will return ambient + diffuse + specular illumination
-            color = shadeRay(ray, closestObject->getMaterial(), intersectionPoint, *closestObject, true);
-        } else  {
-            color = shadeRay(ray, closestObject->getMaterial(), intersectionPoint, *closestObject, false);
         }
 
 
@@ -489,7 +484,7 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
     return bkgcolor.getDiffuseColor();
 }
 
-Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Object& intersectedObject, bool flipNormal) const {
+Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& intersectionPoint, const Object& intersectedObject) const {
     Color colorResult;
     float ka = material.getKa();
     float kd = material.getKd();
@@ -542,9 +537,9 @@ Color Scene::shadeRay(const Ray& ray, const Material& material, const Vector3& i
         // N.normalize();
         N = intersectedObject.calculateNormal(intersectionPoint);
 
-        if (flipNormal) {
-            N = -1.0f * N;
-        }
+        // if (flipNormal) {
+        //     N = -1.0f * N;
+        // }
 
         // V = ray.getOrigin() - intersectionPoint;
         V = -1.0f * ray.getDir();

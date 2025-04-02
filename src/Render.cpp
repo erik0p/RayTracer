@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
                 Color pxColor = scene.traceRay(ray);
                 outputFile << pxColor << std::endl;
             }
-            std::cout << (int(row / scene.getImgHeight() * 100)) << "%\r";
+            std::cout << (int(row / scene.getImgHeight() * 100)) << "%" << std::flush << "\r";
         }
         outputFile.close();
     }

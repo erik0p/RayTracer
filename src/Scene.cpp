@@ -375,7 +375,7 @@ Vector3 Scene::imageToView(int row, int col) const {
 
 Color Scene::traceRay(const Ray& ray) {
     int maxDepth = 10;
-    materialStack.clear();
+    materialStack.clear(); // stores object materials so their refraction indexes can be accessed
     materialStack.push_back(bkgcolor);
     Color color = recursiveTraceRay(ray, maxDepth, NULL, NULL, false);
     color.clamp();
@@ -395,7 +395,8 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
         float t = FLT_MAX;
         float maxT = t;
         float minDistance = 0.01f;
-        if (object->rayIntersects(ray, t, maxT) && (!object->equals(*originObject) || insideObject)) {
+
+        if (object->rayIntersects(ray, t, maxT) && (!object->equals(*originObject) || (insideObject && dynamic_cast<Sphere*>(object)))) {
             if (t < minT && t > 0.0f) {
                 minT = t;
                 closestObject = object;
@@ -423,6 +424,8 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
             N = -1.0f * N;
         }
 
+        // std::cout << "rayIsInside: " << insideObject << " normal: " << N << std::endl;;
+
 
         Vector3 I = -1.0f * ray.getDir(); // Vector in opposite direction of the incident ray
         I.normalize();
@@ -437,9 +440,8 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
         float nt = closestObject->getMaterial().getRefractionIndex();
         float f0 = pow((nt - 1.0f) / (nt + 1.0f), 2.0f);
         float fr = f0 + (1.0f - f0) * pow(1.0f - NdotI, 5.0f); // fresnel reflectance coefficient
-
-        // fr assumed to range [f0, 1.0]
-        // fr = std::clamp(fr, f0, 1.0f);
+        float alpha = closestObject->getMaterial().getOpacity();
+        float ni = materialStack.back().getRefractionIndex();
 
         Color reflectedColor;
 
@@ -447,34 +449,37 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
         if (closestObject->getMaterial().getKs() > 0.0f) {
             reflectedColor = fr * recursiveTraceRay(reflectedRay, maxDepth - 1, closestObject, &intersectionPoint, insideObject);
         }
-
-        float a = closestObject->getMaterial().getOpacity();
-        float ni = materialStack.back().getRefractionIndex();
         // f0 = pow(((nt - ni) / (nt + ni)), 2.0f);
         // fr = f0 + (1.0f - f0) * pow(1.0f - NdotI, 5.0f); // fresnel reflectance coefficient
 
-        float sqrtQuantity = 1.0f - pow((ni / nt), 2.0f) * (1.0f - pow(NdotI, 2.0f));
+        float refractionRatio;
+        if (insideObject) {
+            refractionRatio = nt;
+        } else {
+            refractionRatio = ni / nt;
+        }
+
+        float sqrtQuantity = 1.0f - pow((refractionRatio), 2.0f) * (1.0f - pow(NdotI, 2.0f));
 
         Color refractedColor;
 
         // object will transmit ray if opacity < 1 and there is no total internal reflection
-        if (a < 1.0f && sqrtQuantity >= 0) {
+        if (alpha < 1.0f && sqrtQuantity >= 0) {
 
-            Vector3 transmittedDir = (-1.0f * N) * sqrt(sqrtQuantity) + (ni / nt) * ((NdotI) * N - I);
+            Vector3 transmittedDir = (-1.0f * N) * sqrt(sqrtQuantity) + (refractionRatio) * ((NdotI) * N - I);
             transmittedDir.normalize();
 
             Ray refractedRay = Ray(intersectionPoint, transmittedDir);
 
-            // if we are inside the object already and exiting use background refraction next
-            if (closestObject->equals(*originObject)) {
+            // if we are inside the object already and exiting use background refraction for the next refracted ray
+            if (insideObject) {
                 materialStack.push_back(bkgcolor);
             } else {
                 materialStack.push_back(closestObject->getMaterial());
             }
 
             insideObject = !insideObject; // if object inside then will be outside. if object outside then will be inside
-            refractedColor = (1.0f - fr) * (1.0f - a) * recursiveTraceRay(refractedRay, maxDepth - 1, closestObject, &intersectionPoint, insideObject);
-            // materialStack.pop_back();
+            refractedColor = (1.0f - fr) * (1.0f - alpha) * recursiveTraceRay(refractedRay, maxDepth - 1, closestObject, &intersectionPoint, insideObject);
         }
 
         return color + reflectedColor + refractedColor;

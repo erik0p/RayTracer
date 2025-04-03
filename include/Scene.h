@@ -23,7 +23,8 @@ class Scene {
         Material bkgcolor;
         Material mtlcolor;
         std::vector<Object*> objects;
-        std::vector<Light*> lights;
+        std::vector<Light*> lights; 
+        std::vector<Material*> materials;
 
         DepthCueing depthCue;
         bool depthCueingFlag;

@@ -8,7 +8,7 @@ class Sphere : public Object {
     private:
         Vector3 center;
         float radius;
-        Material material;
+        Material* material;
     public:
 
         /**
@@ -18,12 +18,12 @@ class Sphere : public Object {
          * @param radius_ radius of the sphere
          * @param color_ the color the sphere has
          */
-        Sphere(Vector3& center_, float radius_, Material& material_);
+        Sphere(Vector3& center_, float radius_, Material* material_);
         ~Sphere();
 
         const Vector3& getCenter() const { return center; }
         float getRadius() const { return radius; }
-        const Material& getMaterial() const override { return material; }
+        const Material* getMaterial() const override { return material; }
 
         /**
          * Tests if a ray interesects a sphere and stores the minimum distance the intersection occured at.

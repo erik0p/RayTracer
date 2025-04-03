@@ -1,14 +1,14 @@
 #include "Triangle.h"
 #include "SmoothShadedTriangle.h"
 
-SmoothShadedTriangle::SmoothShadedTriangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material& material_,
+SmoothShadedTriangle::SmoothShadedTriangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material* material_,
                                            Vector3& n0_, Vector3& n1_, Vector3& n2_) : Triangle(v0_, v1_, v2_, material_) {
     n0 = n0_;
     n1 = n1_;
     n2 = n2_;
 }
 
-SmoothShadedTriangle::SmoothShadedTriangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material& material_,
+SmoothShadedTriangle::SmoothShadedTriangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material* material_,
                                            Vector2& vt0_, Vector2& vt1_, Vector2& vt2_, Vector3& n0_, Vector3& n1_, Vector3& n2_) 
                                            : Triangle(v0_, v1_, v2_, material_, vt0_, vt1_, vt2_) {
     n0 = n0_;

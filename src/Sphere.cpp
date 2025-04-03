@@ -6,13 +6,14 @@
 #include "Material.h"
 #include "Object.h"
 
-Sphere::Sphere(Vector3& center_, float radius_, Material& material_) {
+Sphere::Sphere(Vector3& center_, float radius_, Material* material_) {
     center = center_;
     radius = radius_;
     material = material_;
 }
 
-Sphere::~Sphere() {}
+Sphere::~Sphere() {
+}
 
 bool Sphere::rayIntersects(const Ray& ray, float& minT, float& maxT) const {
     float x = ray.getOrigin().getX();
@@ -82,8 +83,8 @@ Vector3 Sphere::calculateNormal(const Vector3& intersectionPoint) const {
 }
 
 Color Sphere::calculateColor(const Vector3& intersectionPoint) const {
-    if (!material.getTextureFlag()) {
-        return material.getDiffuseColor();
+    if (!material->getTextureFlag()) {
+        return material->getDiffuseColor();
     } else {
         Vector3 normal = calculateNormal(intersectionPoint);
         float phi = acos(normal.getZ());
@@ -102,9 +103,9 @@ Color Sphere::calculateColor(const Vector3& intersectionPoint) const {
             v = modf(v, &x);
         }
 
-        int j = round(u * (material.getTextureWidth() - 1));
-        int i = round(v * (material.getTextureHeight() - 1));
-        Color color = material.lookupColor(i, j);
+        int j = round(u * (material->getTextureWidth() - 1));
+        int i = round(v * (material->getTextureHeight() - 1));
+        Color color = material->lookupColor(i, j);
         return color;
     }
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 #include "Material.h"
 
 namespace utils {
@@ -32,5 +33,5 @@ namespace utils {
      */
     bool containsWhiteSpaceOrEmpty(std::string str);
 
-    bool readTextureFile(std::string ppmfile, Material& material);
+    bool readTextureFile(std::string ppmfile, std::vector<Material*>& materials);
 }

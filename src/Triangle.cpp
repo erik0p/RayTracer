@@ -3,14 +3,17 @@
 #include <cmath>
 #include <algorithm>
 
-Triangle::Triangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material& material_) {
+Triangle::~Triangle() {
+}
+
+Triangle::Triangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material* material_) {
     v0 = v0_;
     v1 = v1_;
     v2 = v2_;
     material = material_;
 }
 
-Triangle::Triangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material& material_, 
+Triangle::Triangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material* material_, 
     Vector2& vt0_, Vector2& vt1_, Vector2& vt2_) {
     v0 = v0_;
     v1 = v1_;
@@ -112,8 +115,8 @@ Vector3 Triangle::calculateNormal(const Vector3& intersectionPoint) const {
 }
 
 Color Triangle::calculateColor(const Vector3& intersectionPoint) const {
-    if (!material.getTextureFlag()) {
-        return material.getDiffuseColor();
+    if (!material->getTextureFlag()) {
+        return material->getDiffuseColor();
     } else {
         Vector3 barycentricCoords = calculateBarycentricCoords(intersectionPoint);
         float alpha = barycentricCoords.getX();
@@ -131,10 +134,10 @@ Color Triangle::calculateColor(const Vector3& intersectionPoint) const {
             v = modf(v, &x);
         }
 
-        int j = round(u * (material.getTextureWidth() - 1));
-        int i = round(v * (material.getTextureHeight() - 1));
+        int j = round(u * (material->getTextureWidth() - 1));
+        int i = round(v * (material->getTextureHeight() - 1));
 
-        Color color = material.lookupColor(i, j);
+        Color color = material->lookupColor(i, j);
         return color;
     }
 }

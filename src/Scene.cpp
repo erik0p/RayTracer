@@ -33,7 +33,10 @@ Scene::~Scene() {
         delete light;
     }
     lights.clear();
-
+    for (Material* material : materials) {
+        delete material;
+    }
+    materials.clear();
 }
 
 int Scene::initializeScene(std::string fileName) {
@@ -133,7 +136,9 @@ int Scene::initializeScene(std::string fileName) {
                     "Must provide 12 floats 'mtlcolor odr odg odb osr osg osb ka kd ks n opacity refraction'" << std::endl;
                     return -1;
                 }
-                mtlcolor = Material(Color(odr, odg, odb), Color(osr, osg, osd), ka, kd, ks, n, opacity, refraction);
+                // mtlcolor = Material(Color(odr, odg, odb), Color(osr, osg, osd), ka, kd, ks, n, opacity, refraction);
+                Material* mtl = new Material(Color(odr, odg, odb), Color(osr, osg, osd), ka, kd, ks, n, opacity, refraction);
+                materials.push_back(mtl);
             } else if (keyword.compare("sphere") == 0) {
                 float x, y, z, r;
                 ss >> x;
@@ -145,8 +150,7 @@ int Scene::initializeScene(std::string fileName) {
                     return -1;
                 }
                 Vector3 center(x, y, z);
-                Material material = mtlcolor;
-                Object* sphere = new Sphere(center, r, material);
+                Object* sphere = new Sphere(center, r, materials.back());
                 objects.push_back(sphere);
             } else if (keyword.compare("light") == 0) {
                 float x, y, z, i;
@@ -224,8 +228,7 @@ int Scene::initializeScene(std::string fileName) {
                     v1 = stoi(match[1]);
                     v2 = stoi(match[2]);
                     v3 = stoi(match[3]);
-                    Material material = mtlcolor;
-                    Object *triangle = new Triangle(vertices[v1 - 1], vertices[v2 - 1], vertices[v3 - 1], material);
+                    Object* triangle = new Triangle(vertices[v1 - 1], vertices[v2 - 1], vertices[v3 - 1], materials.back());
                     objects.push_back(triangle);
                 } else if (std::regex_search(remainingData, match, verticesAndNormals)) {
                     int v1, v2, v3, vn1, vn2, vn3;
@@ -235,8 +238,7 @@ int Scene::initializeScene(std::string fileName) {
                     vn2 = stoi(match[4]);
                     v3 = stoi(match[5]);
                     vn3 = stoi(match[6]);
-                    Material material = mtlcolor;
-                    Object* triangle = new SmoothShadedTriangle(vertices[v1 - 1], vertices[v2 - 1], vertices[v3 - 1], material,
+                    Object* triangle = new SmoothShadedTriangle(vertices[v1 - 1], vertices[v2 - 1], vertices[v3 - 1], materials.back(),
                                                                 normals[vn1 - 1], normals[vn2 - 1], normals[vn3 - 1]);
                     objects.push_back(triangle);
                 } else if (std::regex_search(remainingData, match, verticesAndTexture)) {
@@ -247,9 +249,8 @@ int Scene::initializeScene(std::string fileName) {
                     vt2 = stoi(match[4]);
                     v3 = stoi(match[5]);
                     vt3 = stoi(match[6]);
-                    Material material = mtlcolor;
-                    Object *triangle = new Triangle(vertices[v1 - 1], vertices[v2 - 1], vertices[v3 - 1],
-                                                    material, textureCoords[vt1 - 1], textureCoords[vt2 - 1], textureCoords[vt3 - 1]);
+                    Object* triangle = new Triangle(vertices[v1 - 1], vertices[v2 - 1], vertices[v3 - 1],
+                                                    materials.back(), textureCoords[vt1 - 1], textureCoords[vt2 - 1], textureCoords[vt3 - 1]);
                     objects.push_back(triangle);
                 } else if (std::regex_search(remainingData, match, verticesAndTextureWithNormals)) {
                     int v1, v2, v3, vt1, vt2, vt3, vn1, vn2, vn3;
@@ -262,8 +263,7 @@ int Scene::initializeScene(std::string fileName) {
                     v3 = stoi(match[7]);
                     vt3 = stoi(match[8]);
                     vn3 = stoi(match[9]);
-                    Material material = mtlcolor;
-                    Object *triangle = new SmoothShadedTriangle(vertices[v1 - 1], vertices[v2 - 1], vertices[v3 - 1], material,
+                    Object* triangle = new SmoothShadedTriangle(vertices[v1 - 1], vertices[v2 - 1], vertices[v3 - 1], materials.back(),
                                                                 textureCoords[vt1 - 1], textureCoords[vt2 - 1], textureCoords[vt3 - 1],
                                                                 normals[vn1 - 1], normals[vn2 - 1], normals[vn3 - 1]);
                     objects.push_back(triangle);
@@ -290,7 +290,7 @@ int Scene::initializeScene(std::string fileName) {
                     std::cout << "Invalid input for texture. Must provide file name" << std::endl;
                     return -1;
                 }
-                if (!utils::readTextureFile(ppmfile, mtlcolor)) {
+                if (!utils::readTextureFile(ppmfile, materials)) {
                     return -1;
                 }
 
@@ -417,7 +417,7 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
 
         Vector3 N = closestObject->calculateNormal(intersectionPoint);
 
-        Color color = shadeRay(ray, closestObject->getMaterial(), intersectionPoint, *closestObject);
+        Color color = shadeRay(ray, *closestObject->getMaterial(), intersectionPoint, *closestObject);
 
         // If inside an object need to flip its normal direction
         if (insideObject) {
@@ -437,16 +437,16 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
 
         Ray reflectedRay = Ray(intersectionPoint, Rdir);
 
-        float nt = closestObject->getMaterial().getRefractionIndex();
+        float nt = closestObject->getMaterial()->getRefractionIndex();
         float f0 = pow((nt - 1.0f) / (nt + 1.0f), 2.0f);
         float fr = f0 + (1.0f - f0) * pow(1.0f - NdotI, 5.0f); // fresnel reflectance coefficient
-        float alpha = closestObject->getMaterial().getOpacity();
+        float alpha = closestObject->getMaterial()->getOpacity();
         float ni = materialStack.back().getRefractionIndex();
 
         Color reflectedColor;
 
         // object will reflect only when ks > 0
-        if (closestObject->getMaterial().getKs() > 0.0f) {
+        if (closestObject->getMaterial()->getKs() > 0.0f) {
             reflectedColor = fr * recursiveTraceRay(reflectedRay, maxDepth - 1, closestObject, &intersectionPoint, insideObject);
         }
         // f0 = pow(((nt - ni) / (nt + ni)), 2.0f);
@@ -475,7 +475,7 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
             if (insideObject) {
                 materialStack.push_back(bkgcolor);
             } else {
-                materialStack.push_back(closestObject->getMaterial());
+                materialStack.push_back(*closestObject->getMaterial());
             }
 
             insideObject = !insideObject; // if object inside then will be outside. if object outside then will be inside
@@ -600,14 +600,14 @@ float Scene::traceShadow(const Ray& ray, const Object& originObject, Light& ligh
 
                 if (t > 0.0f) { // ray intersects sphere
                     if (dynamic_cast<DirectionalLight *>(&light)) {
-                        shadowFlag = shadowFlag * (1.0f - object->getMaterial().getOpacity());
+                        shadowFlag = shadowFlag * (1.0f - object->getMaterial()->getOpacity());
                     } else {
                         float distance = Vector3::distanceBetween(ray.getOrigin(), light.getDirOrPoint());
 
                         if (t > distance) { // object is behind point light
                             shadowFlag = 1.0f;
                         } else {
-                            shadowFlag = shadowFlag * (1.0f - object->getMaterial().getOpacity());
+                            shadowFlag = shadowFlag * (1.0f - object->getMaterial()->getOpacity());
                         }
                     }
                 }

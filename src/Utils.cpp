@@ -3,6 +3,7 @@
 #include <cctype>
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 float utils::degToRad(float deg) {
     return deg * PI / 180.0f;
@@ -24,7 +25,7 @@ bool utils::containsWhiteSpaceOrEmpty(std::string str) {
     return false;
 }
 
-bool utils::readTextureFile(std::string ppmfile, Material& material) {
+bool utils::readTextureFile(std::string ppmfile, std::vector<Material*>& materials) {
     std::ifstream inputFile("input/texture/" + ppmfile);
     std::string read;
     int width, height, maxColor;
@@ -58,14 +59,22 @@ bool utils::readTextureFile(std::string ppmfile, Material& material) {
         std::cout << "Invalid header for " << ppmfile << std::endl;
         return false;
     }
-    float ka = material.getKa();
-    float kd = material.getKd();
-    float ks = material.getKs();
-    float n = material.getN();
-    float opacity = material.getOpacity();
-    float refractionIndex = material.getRefractionIndex();
-    Color specularColor = material.getSpecularColor();
-    material = Material(ka, kd, ks, n, opacity, refractionIndex, specularColor, width, height, texture);
+    // float ka = material.getKa();
+    // float kd = material.getKd();
+    // float ks = material.getKs();
+    // float n = material.getN();
+    // float opacity = material.getOpacity();
+    // float refractionIndex = material.getRefractionIndex();
+    // Color specularColor = material.getSpecularColor();
+    float ka = materials.back()->getKa();
+    float kd = materials.back()->getKd();
+    float ks = materials.back()->getKs();
+    float n = materials.back()->getN();
+    float opacity = materials.back()->getOpacity();
+    float refractionIndex = materials.back()->getRefractionIndex();
+    Color specularColor = materials.back()->getSpecularColor();
+    Material* material = new Material(ka, kd, ks, n, opacity, refractionIndex, specularColor, width, height, texture);
+    materials.push_back(material);
     std::cout << "Read input/texture/" + ppmfile << std::endl;
     return true;
 }

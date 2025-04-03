@@ -8,9 +8,9 @@ class SmoothShadedTriangle : public Triangle {
         Vector3 n1;
         Vector3 n2;
     public:
-        SmoothShadedTriangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material& material_,
+        SmoothShadedTriangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material* material_,
             Vector3& n0_, Vector3& n1_, Vector3& n2_);
-        SmoothShadedTriangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material& material_, 
+        SmoothShadedTriangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material* material_, 
             Vector2& vt0_, Vector2& vt1_, Vector2& vt2_, Vector3& n0_, Vector3& n1_, Vector3& n2_);
 
         /**

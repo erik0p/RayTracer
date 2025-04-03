@@ -13,8 +13,9 @@ class Triangle : public Object{
         Vector2 vt0;
         Vector2 vt1;
         Vector2 vt2;
-        Material material;
+        Material* material;
     public:
+        ~Triangle();
 
         /**
          * constructor for triangle
@@ -24,7 +25,7 @@ class Triangle : public Object{
          * @param v2_ third vertex
          * @param material_ material for the triangle
          */
-        Triangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material& material_);
+        Triangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material* material_);
 
         /**
          * constructor for triangle with texture coordinates
@@ -37,12 +38,12 @@ class Triangle : public Object{
          * @param vt1_ second vertex texture coordinate
          * @param vt2_ third vertex texture coordinate
          */
-        Triangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material& material_, 
+        Triangle(Vector3& v0_, Vector3& v1_, Vector3& v2_, Material* material_, 
             Vector2& vt0_, Vector2& vt1_, Vector2& vt2_);
         const Vector3& getV0() const { return v0; }
         const Vector3& getV1() const { return v1; }
         const Vector3& getV2() const { return v2; }
-        const Material& getMaterial() const override { return material; }
+        const Material* getMaterial() const override { return material; }
         const Vector2& getVt0() const { return vt0; }
         const Vector2& getVt1() const { return vt1; }
         const Vector2& getVt2() const { return vt2; }

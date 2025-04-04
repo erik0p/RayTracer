@@ -48,7 +48,7 @@ class Scene {
 
         bool softShadowFlag;
 
-        std::vector<Material> materialStack;
+        // std::vector<Material> materialStack;
        
     public:
         Scene();

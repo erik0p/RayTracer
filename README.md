@@ -181,7 +181,7 @@ softshadows flag
     - `v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3` forms a triangle with three vertices and attachs a normal and texture coordinate to each vertex
 
 *softshadows*
-- `softshadows` simulates how light bleeds around objects and doesn't cast a hard shadow
+- `softshadows` simulates how light would cast shadows around the edges of objects that appear fuzzy
 - `flag` 0 for off and 1 for on. Omitting this defaults to off
 
 **Example scene description**

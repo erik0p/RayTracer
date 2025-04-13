@@ -1,6 +1,7 @@
 # RayTracer
-![raytraced image1](/images/showcase.png)
-![raytraced image2](/images/scene_lycksele.png)
+<img src="https://github.com/erik0p/RayTracer/blob/main/images/showcase.png" width="512" height="512"> <img src="https://github.com/erik0p/RayTracer/blob/main/images/reflections.png" width="512" height="512">
+<img src="https://github.com/erik0p/RayTracer/blob/main/images/scene_lycksele.png" width="512" height="512">
+
 # TODO
 - add bi-linear interpolation for texture lookup
 - add functionality to read normal maps

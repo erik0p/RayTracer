@@ -210,7 +210,7 @@ Include any desired texture files inside of `/input/texture/`.
 Then, run the following commands
 ```
 make
-./raytracer1d input/showcase.txt
+./render input/showcase.txt
 ```
 The output file will be in the same location where the input file is.
 

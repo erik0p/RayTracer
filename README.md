@@ -1,5 +1,6 @@
 # RayTracer
-
+![raytraced image1](/images/showcase.png)
+![raytraced image2](/images/scene_lycksele.png)
 # TODO
 - add bi-linear interpolation for texture lookup
 - add functionality to read normal maps
@@ -9,6 +10,7 @@
 - Textures must be placed in the `/input/texture/` directory for the program to find it.
 - Program defaults to using hard-shadows. Add `softshadows 1` to the input description to use softshadows with point lights and attenuated point lights. This will significantly slow down the program.
 - The `/images` directory contains images showcasing the different capabilities of the program. Their corresponding input file can be found in `/input`
+- cube map textures from https://www.humus.name/index.php?page=Textures and https://polyhaven.com/hdris/skies
 
 # Rendering
 The program has the following rendering capabilities:

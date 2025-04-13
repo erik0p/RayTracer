@@ -143,7 +143,7 @@ softshadows flag
 - `aMin` the minimum value of the blending factor that should be applied
 - `aMax` the maximum value of the blending factor that should be applied (choose aMin and aMax to range in [0.0-1.0]
 - `distMin` the minimum distance when the blending factor should begin to be applied
-- `distMax` the maximum distance the blending factor should be applied
+- `distMax` the maximum distance the to apply the strongest amount of blending at
 
 *v*
 - `v` describes a vertex in the scene (used to create triangles)

@@ -96,6 +96,17 @@ class Scene {
          */
         Color traceRay(const Ray& ray);
 
+        /**
+         * recursively traces a ray and any resulting reflection and refraction rays that the ray produces on its path
+         *
+         * @param ray the ray to trace
+         * @param maxDepth the depth to stop the recursive calls
+         * @param originObject the object that the ray originated from, NULL if none 
+         * @param originIntersection the point where a ray intersected the origin object, NULL if none
+         * @param insideObject true if a ray is inside an object, false otherwiseabort
+         * 
+         * @return the color of the pixel hit by the ray
+         */
         Color recursiveTraceRay(const Ray& ray, int depth, const Object* originObject, const Vector3* originIntersection, bool insideObject);
 
         /**

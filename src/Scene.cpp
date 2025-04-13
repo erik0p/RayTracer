@@ -396,6 +396,7 @@ Color Scene::recursiveTraceRay(const Ray& ray, int maxDepth, const Object* origi
         float maxT = t;
         float minDistance = 0.01f;
 
+        // 
         if (object->rayIntersects(ray, t, maxT) && (!object->equals(*originObject) || (insideObject && dynamic_cast<Sphere*>(object)))) {
             if (t < minT && t > 0.0f) {
                 minT = t;

@@ -21,7 +21,7 @@ class AttenuationLight : public Light {
         AttenuationLight(const Vector3 &dir_, float intensity_, float c1_, float c2_, float c3_);
 
         /**
-         * calculated the attenuation factor for the light
+         * calculates the attenuation factor for the light
          * 
          * @param distance distance from intersection point to the light source
          * 

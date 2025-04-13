@@ -49,10 +49,11 @@ class Triangle : public Object{
         const Vector2& getVt2() const { return vt2; }
 
         /**
-         * Tests if a ray interesects a triangle and stores the minimum distance the intersection occured at.
+         * Tests if a ray interesects a triangle and stores the minimum distance the intersection occured at and the further distance along the path of the ray.
          *
          * @param ray the ray to test for intersection
          * @param minT the minimum distance at which an intersection occurs
+         * @param maxT the further distance of t along the path which the nearest intersection occured at
          * 
          * @return true if the ray interects the triangle
          */

@@ -83,7 +83,7 @@ softshadows flag
 - `degrees` the amount in degrees to describe the vertival field of view
   
 *updir*
-- `updir` the up direction relative the the eye
+- `updir` the up direction relative to the eye
 - `x` the x component of a 3d vector to describe a direction
 - `y` the y component of a 3d vector to describe a direction
 - `z` the z component of a 3d vector to describe a direction

@@ -1,5 +1,5 @@
 # RayTracer
-<img src="https://github.com/erik0p/RayTracer/blob/main/images/showcase.png" width="512" height="512"> <img src="https://github.com/erik0p/RayTracer/blob/main/images/reflections.png" width="512" height="512">
+<img src="https://github.com/erik0p/RayTracer/blob/main/images/showcase2.png" width="512" height="512"> <img src="https://github.com/erik0p/RayTracer/blob/main/images/reflections.png" width="512" height="512">
 <img src="https://github.com/erik0p/RayTracer/blob/main/images/scene_lycksele.png" width="512" height="512">
 
 # TODO

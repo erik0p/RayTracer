@@ -29,9 +29,9 @@ The program has the following rendering capabilities:
 - Refractions
 
 # Overview
-This program takes the name of a scene description file and outputs a `.ppm` file. The program has raytracing functionality. It can render spheres, and cast rays into the scene to determine if a ray intersects with a sphere. Spheres are shaded using the Blinn-Phong illumination model. Shading and raycasting is done inside of scene.cpp and pixels are written to the output file in render.cpp. Recursive raytracing is used to model the reflective and refractive properties of materials as described by their material properties.
+The program takes the name of a scene description file and outputs a `.ppm` file. The program can render spheres, and cast rays into the scene to determine if a ray intersects with a sphere. Spheres are shaded using the Blinn-Phong illumination model. Shading and raycasting is done inside of scene.cpp and pixels are written to the output file in render.cpp. Recursive raytracing is used to model the reflective and refractive properties of materials as described by their material properties.
 
-The program is capable of mapping textures to both spheres and triangles. 
+The program can also map textures to both spheres and triangles. 
 
 Input files should contain some or all of the following information:
 ```
